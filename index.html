@@ -615,13 +615,18 @@
     stop:    { cls: "stop",    label: "Games suspended or cancelled" }
   };
 
-  // Geocoded from the clubs' published addresses; every one verified to
-  // return an NWS WBGT forecast (all fall inside the Kansas City EAX grid).
-  var HOME = "Union KC home fields", HEARTLAND = "Other Heartland complexes";
+  // Each coordinate is the VENUE'S OWN street address, not its town — NWS grid
+  // cells are only 1.53 mi square, so a town centroid lands in a different cell
+  // and can read ~2°F cooler, which straddles the 92.0 line. All five verified
+  // by reverse geocode: Paragon Star = 1401 NW River Rd (confirmed against
+  // paragonstar.com), Garmin Olathe = 10541 S Warwick St, Scheels OP = Switzer
+  // Rd, Swope = Lewis Rd, Compass Minerals = literally "Field 7".
+  // Groups follow unionkcsoccer.com/field-locations.
+  var HOME = "Union KC fields", HEARTLAND = "Other Heartland complexes";
   var SITES = [
     { id: "para", name: "Paragon Star (Lee's Summit)", lat: 38.9413, lon: -94.4421, group: HOME },
     { id: "gosc", name: "Garmin Olathe",               lat: 38.9380, lon: -94.8042, group: HOME },
-    { id: "sop",  name: "Scheels Overland Park",       lat: 38.8799, lon: -94.7006, group: HEARTLAND },
+    { id: "sop",  name: "Scheels Overland Park",       lat: 38.8799, lon: -94.7006, group: HOME },
     { id: "ssv",  name: "Swope Soccer Village",        lat: 39.0143, lon: -94.5211, group: HEARTLAND },
     { id: "cmsf", name: "Compass Minerals",            lat: 39.1215, lon: -94.7914, group: HEARTLAND }
   ];
