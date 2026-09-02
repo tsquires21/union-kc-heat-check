@@ -206,6 +206,55 @@
   .ghost:hover { border-color: var(--accent); color: var(--accent); }
   .ghost:disabled { opacity: .5; cursor: default; }
 
+  .seg-wrap { margin-top: 14px; }
+
+  .seg {
+    display: flex;
+    gap: 4px;
+    background: var(--tint);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 4px;
+  }
+  .seg button {
+    flex: 1 1 0;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink-soft);
+    padding: 9px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: .85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .seg button[aria-pressed="true"] {
+    background: var(--navy);
+    color: var(--on-navy);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+  }
+
+  .hero-alt {
+    font-size: .8125rem;
+    color: var(--ink-soft);
+    margin: 10px 0 0;
+    padding-top: 9px;
+    border-top: 1px solid var(--tone-line);
+  }
+  .hero-alt.differs { font-weight: 650; color: var(--tone); }
+
+  .note {
+    font-size: .875rem;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+    line-height: 1.55;
+  }
+  .note:last-child { margin-bottom: 0; }
+  .note b { color: var(--ink); }
+
   /* ── Hero ─────────────────────────────────────────── */
   .hero { padding: 0; overflow: hidden; }
 
@@ -456,6 +505,13 @@
       </div>
       <button class="ghost" id="locate" type="button">Use my location</button>
     </div>
+    <div class="seg-wrap">
+      <label class="field" id="method-label">How to read the heat</label>
+      <div class="seg" id="method" role="group" aria-labelledby="method-label">
+        <button type="button" data-m="chart">Heartland&rsquo;s chart</button>
+        <button type="button" data-m="nws">NWS model</button>
+      </div>
+    </div>
   </div>
 
   <div id="status" class="status"><div class="spin"></div>Loading forecast&hellip;</div>
@@ -483,6 +539,25 @@
     </section>
 
     <section class="card">
+      <h2>Why two numbers?</h2>
+      <p class="note"><b>Heartland&rsquo;s chart</b> is the US Soccer table printed at the bottom
+      of their extreme-heat page: look up air temperature against relative humidity and read off
+      an estimated WBGT. It is what a coach with a phone and no meter will quote, and it is the
+      more cautious of the two.</p>
+      <p class="note"><b>The NWS model</b> is the National Weather Service&rsquo;s own hourly WBGT
+      forecast for that exact field. It uses the same temperature and humidity, but also the real
+      sun angle, cloud cover and wind for that hour.</p>
+      <p class="note">That last part is the whole difference. The chart&rsquo;s own footnote says
+      its formula &ldquo;is valid for full sunshine and a light wind&rdquo; &mdash; so for an
+      evening kickoff, or a breezy day, <b>the chart reads high</b>. A 5 PM game with a 10 mph
+      wind can sit two full categories apart on the two methods. Neither is wrong; they answer
+      slightly different questions.</p>
+      <p class="note">Heartland decides with a real WBGT meter at the field, which the NWS number
+      is closer to. The chart is the safer planning number. This page shows both so you are never
+      surprised by either.</p>
+    </section>
+
+    <section class="card">
       <h2>Heartland&rsquo;s three outcomes</h2>
       <div class="legend">
         <div class="go"><b>&le; 86.9&deg;</b><span>Games on as scheduled</span></div>
@@ -497,9 +572,9 @@
     Wet Bulb Globe Temperature device on-site at game time and posts updates to their weather
     line. Use this to decide what to pack and what to expect &mdash; not whether a game is on.</p>
     <p>WBGT is <em>not</em> the same as plain wet-bulb temperature: it also folds in sunshine and
-    wind, and runs roughly 10&ndash;15&deg; hotter on a clear afternoon. The numbers here are the
-    National Weather Service hourly WBGT forecast for that exact field, so they are the
-    same quantity Heartland measures.</p>
+    wind, and runs roughly 10&ndash;15&deg; hotter on a clear afternoon. Both numbers on this page
+    are WBGT &mdash; the same quantity Heartland measures &mdash; just estimated two different
+    ways. See &ldquo;Why two numbers?&rdquo; above.</p>
     <p><strong>Unofficial.</strong> A parent-built tool, not affiliated with or endorsed by
     Union KC Soccer Club or the Heartland Soccer Association. The crest belongs to the club.</p>
     <p>Data: <a href="https://api.weather.gov" rel="noreferrer">api.weather.gov</a> (NWS Kansas City).
@@ -516,6 +591,20 @@
   // ── Heartland's published thresholds, in °F WBGT ────────────────────
   var HEAT_SCHEDULE_MIN = 87.0;   // 87.0–91.9  → shortened games + water breaks
   var SUSPEND_MIN       = 92.0;   // ≥ 92.0     → suspended or cancelled
+
+  var METHOD = {
+    chart: { name: "Heartland's chart", short: "Chart" },
+    nws:   { name: "NWS model",         short: "NWS model" }
+  };
+
+  // The chart Heartland publishes is a rendering of the Bureau of Meteorology
+  // approximation — temperature and humidity only, assuming full sun and light
+  // wind. Reproduced here to within one chart cell (cells step 1.8°F = 1°C).
+  function chartWBGT(tempF, rh) {
+    var t = (tempF - 32) * 5 / 9;
+    var e = rh / 100 * 6.105 * Math.exp(17.27 * t / (237.7 + t));
+    return (0.567 * t + 0.393 * e + 3.94) * 9 / 5 + 32;
+  }
 
   var LEVELS = {
     go:      { cls: "go",      label: "Games on as scheduled" },
@@ -537,7 +626,16 @@
   var UA_NOTE = "SoccerHeatCheck";
   var GRID_CACHE = {};          // lat,lon -> gridpoint URL
   var state = { points: [], tz: "America/Chicago", dayKeys: [], dayIndex: 0,
-                site: null, nowIdx: 0, stale: false };
+                site: null, nowIdx: 0, stale: false, method: "chart" };
+
+  // Every hour carries both readings. If one is missing, fall back to the other
+  // rather than blanking the hour.
+  function val(p, method) {
+    var m = method || state.method;
+    var v = p[m];
+    if (v === null || v === undefined) v = p[m === "chart" ? "nws" : "chart"];
+    return v;
+  }
 
   // NWS gridpoint arrays begin at the last model run, so the first value is
   // routinely hours in the PAST. "Now" is the hour containing the clock, not
@@ -579,23 +677,22 @@
     return h > 0 ? h : 1;
   }
 
-  function expand(values, uom) {
-    var toF = /degC/i.test(uom || "") ? function (c) { return c * 9 / 5 + 32; }
-                                      : function (v) { return v; };
+  function expand(series) {
+    if (!series || !series.values || !series.values.length) return [];
+    var isC = /degC/i.test(series.uom || "");
     var out = [];
-    for (var i = 0; i < values.length; i++) {
-      var v = values[i];
+    for (var i = 0; i < series.values.length; i++) {
+      var v = series.values[i];
       if (v.value === null || v.value === undefined) continue;
       var parts = String(v.validTime).split("/");
       var start = new Date(parts[0]);
       if (isNaN(start)) continue;
       var span = Math.max(1, Math.round(durationHours(parts[1])));
-      var f = toF(v.value);
+      var value = isC ? v.value * 9 / 5 + 32 : v.value;
       for (var h = 0; h < span; h++) {
-        out.push({ t: new Date(start.getTime() + h * 3600000), f: f });
+        out.push({ t: new Date(start.getTime() + h * 3600000), v: value });
       }
     }
-    out.sort(function (a, b) { return a.t - b.t; });
     return out;
   }
 
@@ -635,11 +732,32 @@
       state.tz = grid.tz || "America/Chicago";
       return getJSON(grid.url, true);
     }).then(function (g) {
-      var wb = g.properties && g.properties.wetBulbGlobeTemperature;
-      if (!wb || !wb.values || !wb.values.length) {
+      var props = g.properties || {};
+      if (!props.wetBulbGlobeTemperature || !props.wetBulbGlobeTemperature.values ||
+          !props.wetBulbGlobeTemperature.values.length) {
         throw new Error("NO_WBGT");
       }
-      return expand(wb.values, wb.uom);
+
+      var byHour = {};
+      function fold(series, key) {
+        expand(series).forEach(function (pt) {
+          var k = pt.t.getTime();
+          if (!byHour[k]) byHour[k] = { t: pt.t };
+          byHour[k][key] = pt.v;
+        });
+      }
+      fold(props.wetBulbGlobeTemperature, "nws");
+      fold(props.temperature, "tempF");
+      fold(props.relativeHumidity, "rh");
+
+      return Object.keys(byHour).map(function (k) {
+        var pt = byHour[k];
+        pt.chart = (pt.tempF !== undefined && pt.rh !== undefined)
+          ? chartWBGT(pt.tempF, pt.rh) : null;
+        return pt;
+      }).filter(function (pt) {
+        return pt.nws !== undefined || pt.chart !== null;
+      }).sort(function (a, b) { return a.t - b.t; });
     });
   }
 
@@ -649,24 +767,24 @@
     var hero = $("hero");
     if (!now) { hero.textContent = ""; return; }
 
-    var lvl = categorize(now.f);
+    var lvl = categorize(val(now));
     hero.className = "hero-band " + lvl.cls;
 
     // When does the category next change?
     var change = null;
     for (var i = state.nowIdx + 1; i < state.points.length && i <= state.nowIdx + 36; i++) {
-      if (categorize(state.points[i].f).cls !== lvl.cls) { change = state.points[i]; break; }
+      if (categorize(val(state.points[i])).cls !== lvl.cls) { change = state.points[i]; break; }
     }
 
     var detail;
     if (change) {
-      var to = categorize(change.f);
+      var to = categorize(val(change));
       // "1 PM" alone is ambiguous once the change lands on another day.
       var whenChange = dayKey(change.t) === dayKey(now.t)
         ? hourLabel(change.t)
         : dayLabel(change.t) + " " + hourLabel(change.t);
       detail = "Changes to “" + to.label.split(" — ")[0] + "” around " +
-               whenChange + " (" + round1(change.f) + "°).";
+               whenChange + " (" + round1(val(change)) + "°).";
     } else {
       detail = "No category change forecast in the next 36 hours.";
     }
@@ -675,11 +793,27 @@
       ? "latest reading, " + hourLabel(now.t)
       : "now, " + hourLabel(now.t);
 
+    // Always surface the method you are NOT looking at, so a disagreement
+    // between the chart and the model can never take you by surprise.
+    var otherM = state.method === "chart" ? "nws" : "chart";
+    var other = now[otherM];
+    var altHtml = "";
+    if (other !== null && other !== undefined) {
+      var oLvl = categorize(other);
+      var same = oLvl.cls === lvl.cls;
+      altHtml = '<p class="hero-alt' + (same ? '' : ' differs') + '">' +
+        esc(METHOD[otherM].name) + ': ' + round1(other) + '°' +
+        (same ? ' — same call.'
+              : ' — that is “' + esc(oLvl.label.split(" — ")[0]) + '”.') +
+        '</p>';
+    }
+
     hero.innerHTML =
       '<div class="hero-when">' + esc(state.site) + " · " + esc(when) + '</div>' +
-      '<p class="hero-temp">' + round1(now.f) + '<small>°F WBGT</small></p>' +
+      '<p class="hero-temp">' + round1(val(now)) + '<small>°F WBGT</small></p>' +
       '<p class="hero-verdict">' + esc(lvl.label) + '</p>' +
-      '<p class="hero-detail">' + esc(detail) + '</p>';
+      '<p class="hero-detail">' + esc(METHOD[state.method].name) + ". " + esc(detail) + '</p>' +
+      altHtml;
   }
 
   function renderDays() {
@@ -689,7 +823,7 @@
       var pts = state.points.filter(function (p) { return dayKey(p.t) === key; });
       var base = playableHours(pts, i === 0);
       if (!base.length) base = pts;
-      var peak = Math.max.apply(null, base.map(function (p) { return p.f; }));
+      var peak = Math.max.apply(null, base.map(function (p) { return val(p); }));
       var lvl = categorize(peak);
       var b = document.createElement("button");
       b.type = "button";
@@ -740,11 +874,15 @@
     }
 
     var html = show.map(function (p) {
-      var lvl = categorize(p.f);
+      var lvl = categorize(val(p));
       var isNow = p.t.getTime() === nowT;
-      return '<li class="' + lvl.cls + (isNow ? " is-now" : "") + '">' +
+      var other = p[state.method === "chart" ? "nws" : "chart"];
+      var tip = (other === null || other === undefined) ? "" :
+        ' title="' + esc(METHOD[state.method === "chart" ? "nws" : "chart"].name) +
+        ': ' + round1(other) + '°F"';
+      return '<li class="' + lvl.cls + (isNow ? " is-now" : "") + '"' + tip + '>' +
                '<span class="h-time">' + esc(hourLabel(p.t)) + '</span>' +
-               '<span class="h-temp">' + round1(p.f) + '°</span>' +
+               '<span class="h-temp">' + round1(val(p)) + '°</span>' +
                '<span class="h-verdict">' + esc(lvl.label) + '</span>' +
              '</li>';
     }).join("");
@@ -759,10 +897,10 @@
       // happened is not a forecast.
       var base = playableHours(pts, i === 0);
       if (!base.length) base = pts;
-      var peak = Math.max.apply(null, base.map(function (p) { return p.f; }));
+      var peak = Math.max.apply(null, base.map(function (p) { return val(p); }));
       var lvl = categorize(peak);
       var counts = { go: 0, caution: 0, stop: 0 };
-      base.forEach(function (p) { counts[categorize(p.f).cls]++; });
+      base.forEach(function (p) { counts[categorize(val(p)).cls]++; });
       var bar = ["go", "caution", "stop"].map(function (c) {
         var pct = (counts[c] / base.length) * 100;
         return pct > 0
@@ -794,7 +932,7 @@
     var W = 720, H = 300, L = 54, R = 16, T = 18, B = 34;
     var pw = W - L - R, ph = H - T - B;
 
-    var vals = pts.map(function (p) { return p.f; });
+    var vals = pts.map(function (p) { return val(p); });
     var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
     // Always keep both thresholds in frame so the bands mean something.
     lo = Math.min(lo, HEAT_SCHEDULE_MIN - 3);
@@ -839,14 +977,14 @@
     });
 
     // Trace
-    var d = pts.map(function (p, i) { return (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.f).toFixed(1); }).join(" ");
+    var d = pts.map(function (p, i) { return (i ? "L" : "M") + x(i).toFixed(1) + " " + y(val(p)).toFixed(1); }).join(" ");
     s.push('<path class="trace" d="' + d + '"/>');
 
     // Dots
     pts.forEach(function (p, i) {
       if (i % 2 && pts.length > 14) return;
-      s.push('<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.f).toFixed(1) + '" r="4" fill="var(--card)" stroke="var(--navy)" stroke-width="2.5"><title>' +
-             esc(hourLabel(p.t)) + " — " + round1(p.f) + "°F — " + esc(categorize(p.f).label) + '</title></circle>');
+      s.push('<circle cx="' + x(i).toFixed(1) + '" cy="' + y(val(p)).toFixed(1) + '" r="4" fill="var(--card)" stroke="var(--navy)" stroke-width="2.5"><title>' +
+             esc(hourLabel(p.t)) + " — " + round1(val(p)) + "°F — " + esc(categorize(val(p)).label) + '</title></circle>');
     });
 
     var svg = $("chart");
@@ -893,10 +1031,7 @@
         if (!seen[k]) { seen[k] = 1; state.dayKeys.push(k); }
       });
 
-      renderHero();
-      renderDays();
-      renderDay();
-      renderWeek();
+      renderAll();
       $("stamp").textContent = "Updated " + fmt(new Date(), { hour: "numeric", minute: "2-digit", hour12: true }) + ".";
 
       show(st, false);
@@ -910,6 +1045,20 @@
              (e && e.message ? e.message + ". " : "") + "Check your connection and try again.");
       }
     });
+  }
+
+  function renderAll() {
+    renderHero();
+    renderDays();
+    renderDay();
+    renderWeek();
+  }
+
+  function paintMethod() {
+    var btns = $("method").querySelectorAll("button");
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].setAttribute("aria-pressed", String(btns[i].dataset.m === state.method));
+    }
   }
 
   function remember(id) {
@@ -937,6 +1086,21 @@
 
     var saved = recall();
     if (saved && SITES.some(function (s) { return s.id === saved; })) sel.value = saved;
+
+    try {
+      var m = localStorage.getItem("soccer-heat-method");
+      if (m === "chart" || m === "nws") state.method = m;
+    } catch (e) { /* private mode */ }
+    paintMethod();
+
+    $("method").addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-m]");
+      if (!b || b.dataset.m === state.method) return;
+      state.method = b.dataset.m;
+      try { localStorage.setItem("soccer-heat-method", state.method); } catch (err) { /* ignore */ }
+      paintMethod();
+      if (state.points.length) renderAll();
+    });
 
     function current() {
       return SITES.filter(function (s) { return s.id === sel.value; })[0] || SITES[0];
