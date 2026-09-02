@@ -508,7 +508,8 @@
     <div class="seg-wrap">
       <label class="field" id="method-label">How to read the heat</label>
       <div class="seg" id="method" role="group" aria-labelledby="method-label">
-        <button type="button" data-m="chart">Heartland&rsquo;s chart</button>
+        <button type="button" data-m="chart">Chart</button>
+        <button type="button" data-m="formula">Formula</button>
         <button type="button" data-m="nws">NWS model</button>
       </div>
     </div>
@@ -539,38 +540,49 @@
     </section>
 
     <section class="card">
-      <h2>Why two numbers?</h2>
-      <p class="note"><b>Heartland&rsquo;s chart</b> is the US Soccer table printed at the bottom
-      of their extreme-heat page: look up air temperature against relative humidity and read off
-      an estimated WBGT. It is what a coach with a phone and no meter will quote.</p>
-      <p class="note"><b>The NWS model</b> is the National Weather Service&rsquo;s own hourly WBGT
-      forecast for that exact field. Same temperature and humidity, but it also uses the real sun
-      angle, cloud cover and wind for that hour.</p>
-      <p class="note">The chart&rsquo;s footnote credits Australia&rsquo;s Bureau of Meteorology,
-      and the Bureau is blunt about what it cannot do. In their words, the approximation
-      &ldquo;<b>does not take into account variations in the intensity of solar radiation or of
-      windspeed</b>, and assumes a moderately high radiation level in light wind conditions&hellip;
-      particularly in cloudy and windy conditions&hellip; the approximation is <b>likely to lead to
-      an overestimate of the stress</b>.&rdquo; They add that it also overestimates
-      &ldquo;night-time and early morning conditions when the sun is low.&rdquo;</p>
+      <h2>Three ways to read the heat</h2>
+      <p class="note"><b>Chart</b> &mdash; a real cell from the table US Soccer publishes and
+      Heartland prints at the bottom of their extreme-heat page. Find the air temperature along
+      the top, the humidity down the side, read off the box. <b>This is the number your coach and
+      the other parents are quoting</b>, so it is what this page shows by default.</p>
+      <p class="note">One catch worth knowing, because it will explain any argument you have with
+      someone else&rsquo;s lookup. The table only prints every 1.8&deg;F and every 5% humidity, so
+      a real forecast almost never lands on a box &mdash; <b>you have to round, and which way you
+      round changes the answer.</b> This page takes the <em>nearest</em> box in both directions.
+      Someone who instead rounds down to the box before theirs can land a whole category lower:
+      96&deg;F at 38% is &ldquo;cancelled&rdquo; rounded to nearest and &ldquo;heat schedule&rdquo;
+      rounded down. Across a typical week that choice flips the verdict in roughly one hour in
+      three. Nearest is the closer match to the formula the table was built from, which is why it
+      is the one used here &mdash; and it is the more cautious of the two.</p>
+      <p class="note"><b>Formula</b> &mdash; the equation that table was generated from, run
+      directly instead of looked up. The printed chart steps in 1.8&deg; jumps because it is
+      really a Celsius table; the formula gives the value in between. It agrees with every one of
+      the 432 printed cells to within 1&deg;.</p>
+      <p class="note"><b>NWS model</b> &mdash; the National Weather Service&rsquo;s own hourly
+      WBGT forecast for that exact field. Same temperature and humidity, but it also uses the real
+      sun angle, cloud cover and wind for that hour.</p>
+      <p class="note">The chart and the model routinely disagree, and the chart&rsquo;s own
+      authors say why. The table traces to Australia&rsquo;s Bureau of Meteorology, who state that
+      the approximation &ldquo;<b>does not take into account variations in the intensity of solar
+      radiation or of windspeed</b>&rdquo; and that in cloudy or windy conditions it is
+      &ldquo;<b>likely to lead to an overestimate of the stress</b>.&rdquo;</p>
       <p class="note">Read &ldquo;overestimate&rdquo; carefully: <b>wind does not push the
-      chart&rsquo;s number up.</b> The chart cannot see wind at all &mdash; feed it the same
-      temperature and humidity on a still day and a blustery one and it returns the identical
-      number. What moves is reality. A WBGT meter is mostly a wet thermometer and a black ball,
-      and wind cools both, so the true reading falls while the chart stays put. The gap opens
-      underneath it.</p>
+      chart&rsquo;s number up.</b> The chart cannot see wind at all &mdash; give it the same
+      temperature and humidity on a still day and a blustery one and it returns the identical box.
+      What moves is reality. A WBGT meter is mostly a wet thermometer and a black ball, and wind
+      cools both, so the true reading falls while the chart stays put. The gap opens underneath
+      it.</p>
       <p class="note">In practice the chart has run 5&ndash;9&deg; above the model at every
-      playing hour this week &mdash; morning included &mdash; easily enough to put the two in
-      different categories all day.</p>
-      <p class="note">So: the chart is the cautious number and the one Heartland publishes. The
-      model is closer to what a real meter at the field would read, and on a breezy week the
-      chart&rsquo;s own authors would expect it to run high. When the two split, treat the day as
-      genuinely borderline and check again nearer kickoff.</p>
-      <p class="note" style="font-size:.8125rem">Provenance, for the curious: US Soccer adapted
-      the table from the Bureau of Meteorology, who in turn cite the American College of Sports
-      Medicine&rsquo;s 1984 position stand on preventing thermal injuries in distance running
-      (<em>Med. J. Aust.</em>, Dec 1984). The formula is
-      <code>WBGT = 0.567&middot;Ta + 0.393&middot;e + 3.94</code>.</p>
+      playing hour this week &mdash; morning included &mdash; easily enough to put them in
+      different categories all day. When they split, treat the day as genuinely borderline: the
+      chart is the cautious number and the one that gets quoted; the model is closer to what a
+      real meter at the field would read.</p>
+      <p class="note" style="font-size:.8125rem">Provenance: the table comes from the US Soccer
+      Heat Guidelines, which adapted it from the Bureau of Meteorology, who in turn cite the
+      American College of Sports Medicine&rsquo;s 1984 position stand on preventing thermal
+      injuries in distance running (<em>Med. J. Aust.</em>, Dec 1984). The formula is
+      <code>WBGT = 0.567&middot;Ta + 0.393&middot;e + 3.94</code>. Above about 90&deg;F with high
+      humidity the printed table simply stops, and this page falls back to the formula.</p>
     </section>
 
     <section class="card">
@@ -608,9 +620,57 @@
   var HEAT_SCHEDULE_MIN = 87.0;   // 87.0–91.9  → shortened games + water breaks
   var SUSPEND_MIN       = 92.0;   // ≥ 92.0     → suspended or cancelled
 
+  // ── The published US Soccer chart, digitised ──────────────────────────
+  // Extracted by word position from the US Soccer Heat Guidelines PDF (the same
+  // table Heartland prints), not OCR'd and not recomputed: these are the exact
+  // printed cells, which is what parents and coaches actually read off.
+  // 432 cells. Every value sits on a 1.8°F (1°C) lattice from 59.0°F, so each
+  // row is stored as two-digit lattice indices; "__" is off the printed table.
+  var CHART_T0 = 68.0, CHART_TSTEP = 1.8, CHART_TN = 31;
+  var CHART_BASE = 59.0, CHART_STEP = 1.8;
+  var CHART_ROWS = [
+    "00010102030304040505060707080809091010111212131314141516161717",  // 0%
+    "01010203030404050606070708090910111112121314141516161718181920",  // 5%
+    "01020203040405060607080809101011121213141515161717181920212122",  // 10%
+    "020203040405060607080809101111121314141516171818192021222324__",  // 15%
+    "02030304050606070809091011121213141516171718192021222324______",  // 20%
+    "0303040505060708090910111213131415161718192021222324__________",  // 25%
+    "030405050607080809101112131414151617181920212224______________",  // 30%
+    "0304050607080809101112131415161718192021222324________________",  // 35%
+    "04050606070809101112131415161718192021222324__________________",  // 40%
+    "0405060708091011121213141517181920212223______________________",  // 45%
+    "05060708080910111213141516181920212224________________________",  // 50%
+    "050607080910111213141516171920212223__________________________",  // 55%
+    "0607080910111213141516171820212223____________________________",  // 60%
+    "06070809101112131416171819212223______________________________",  // 65%
+    "07080910111213141516181920212324______________________________",  // 70%
+    "070809101112141516171820212224________________________________",  // 75%
+    "0809101112131415171819212223__________________________________",  // 80%
+    "0809101113141516171920222324__________________________________",  // 85%
+    "09101112131416171820212224____________________________________",  // 90%
+    "091011121415161819202223______________________________________",  // 95%
+    "091112131416171820212324______________________________________",  // 100%
+  ];
+
+  // Read the table the way a person does: nearest printed row, nearest printed
+  // column. Returns null past the table's stepped right edge.
+  function chartLookup(tempF, rh) {
+    var ri = Math.round(rh / 5);
+    if (ri < 0) ri = 0;
+    if (ri >= CHART_ROWS.length) ri = CHART_ROWS.length - 1;
+    var ci = Math.round((tempF - CHART_T0) / CHART_TSTEP);
+    if (ci < 0) ci = 0;
+    if (ci >= CHART_TN) return null;
+    var code = CHART_ROWS[ri].substr(ci * 2, 2);
+    if (code === "__" || code.length < 2) return null;
+    return CHART_BASE + parseInt(code, 10) * CHART_STEP;
+  }
+
+  var ORDER = ["chart", "formula", "nws"];
   var METHOD = {
-    chart: { name: "Heartland's chart", short: "Chart" },
-    nws:   { name: "NWS model",         short: "NWS model" }
+    chart:   { name: "Printed chart",  short: "Chart" },
+    formula: { name: "Chart formula",  short: "Formula" },
+    nws:     { name: "NWS model",      short: "NWS model" }
   };
 
   // The chart Heartland publishes is a rendering of the Bureau of Meteorology
@@ -649,13 +709,17 @@
   var state = { points: [], tz: "America/Chicago", dayKeys: [], dayIndex: 0,
                 site: null, nowIdx: 0, stale: false, method: "chart" };
 
-  // Every hour carries both readings. If one is missing, fall back to the other
-  // rather than blanking the hour.
+  // Every hour carries all three readings. The printed chart runs out past its
+  // stepped right edge, so fall through the others rather than blanking an hour.
   function val(p, method) {
     var m = method || state.method;
     var v = p[m];
-    if (v === null || v === undefined) v = p[m === "chart" ? "nws" : "chart"];
-    return v;
+    if (v !== null && v !== undefined) return v;
+    for (var i = 0; i < ORDER.length; i++) {
+      v = p[ORDER[i]];
+      if (v !== null && v !== undefined) return v;
+    }
+    return null;
   }
 
   // NWS gridpoint arrays begin at the last model run, so the first value is
@@ -773,11 +837,13 @@
 
       return Object.keys(byHour).map(function (k) {
         var pt = byHour[k];
-        pt.chart = (pt.tempF !== undefined && pt.rh !== undefined)
-          ? chartWBGT(pt.tempF, pt.rh) : null;
+        var have = pt.tempF !== undefined && pt.rh !== undefined;
+        pt.chart = have ? chartLookup(pt.tempF, pt.rh) : null;
+        pt.formula = have ? chartWBGT(pt.tempF, pt.rh) : null;
+        if (pt.nws === undefined) pt.nws = null;
         return pt;
       }).filter(function (pt) {
-        return pt.nws !== undefined || pt.chart !== null;
+        return pt.nws !== null || pt.chart !== null || pt.formula !== null;
       }).sort(function (a, b) { return a.t - b.t; });
     });
   }
@@ -814,20 +880,23 @@
       ? "latest reading, " + hourLabel(now.t)
       : "now, " + hourLabel(now.t);
 
-    // Always surface the method you are NOT looking at, so a disagreement
-    // between the chart and the model can never take you by surprise.
-    var otherM = state.method === "chart" ? "nws" : "chart";
-    var other = now[otherM];
-    var altHtml = "";
-    if (other !== null && other !== undefined) {
-      var oLvl = categorize(other);
+    // Always surface the methods you are NOT looking at, so a disagreement can
+    // never take you by surprise.
+    var parts = [], anyDiff = false;
+    ORDER.forEach(function (m) {
+      if (m === state.method) return;
+      var o = now[m];
+      if (o === null || o === undefined) return;
+      var oLvl = categorize(o);
       var same = oLvl.cls === lvl.cls;
-      altHtml = '<p class="hero-alt' + (same ? '' : ' differs') + '">' +
-        esc(METHOD[otherM].name) + ': ' + round1(other) + '°' +
-        (same ? ' — same call.'
-              : ' — that is “' + esc(oLvl.label.split(" — ")[0]) + '”.') +
-        '</p>';
-    }
+      if (!same) anyDiff = true;
+      parts.push(esc(METHOD[m].name) + ' ' + round1(o) + '°' +
+                 (same ? '' : ' (' + esc(oLvl.label.split(" — ")[0]) + ')'));
+    });
+    var altHtml = parts.length
+      ? '<p class="hero-alt' + (anyDiff ? ' differs' : '') + '">' +
+        parts.join(' · ') + (anyDiff ? '' : ' — same call.') + '</p>'
+      : "";
 
     hero.innerHTML =
       '<div class="hero-when">' + esc(state.site) + " · " + esc(when) + '</div>' +
@@ -897,10 +966,15 @@
     var html = show.map(function (p) {
       var lvl = categorize(val(p));
       var isNow = p.t.getTime() === nowT;
-      var other = p[state.method === "chart" ? "nws" : "chart"];
-      var tip = (other === null || other === undefined) ? "" :
-        ' title="' + esc(METHOD[state.method === "chart" ? "nws" : "chart"].name) +
-        ': ' + round1(other) + '°F"';
+      var tipParts = [];
+      ORDER.forEach(function (m) {
+        if (m === state.method) return;
+        var o = p[m];
+        if (o !== null && o !== undefined) {
+          tipParts.push(METHOD[m].name + ": " + round1(o) + "°F");
+        }
+      });
+      var tip = tipParts.length ? ' title="' + esc(tipParts.join(" · ")) + '"' : "";
       return '<li class="' + lvl.cls + (isNow ? " is-now" : "") + '"' + tip + '>' +
                '<span class="h-time">' + esc(hourLabel(p.t)) + '</span>' +
                '<span class="h-temp">' + round1(val(p)) + '°</span>' +
@@ -1110,7 +1184,7 @@
 
     try {
       var m = localStorage.getItem("soccer-heat-method");
-      if (m === "chart" || m === "nws") state.method = m;
+      if (ORDER.indexOf(m) >= 0) state.method = m;
     } catch (e) { /* private mode */ }
     paintMethod();
 
