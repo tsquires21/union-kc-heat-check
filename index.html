@@ -255,6 +255,18 @@
   .note:last-child { margin-bottom: 0; }
   .note b { color: var(--ink); }
 
+  .formula { margin: 2px 0 10px; text-align: center; }
+  .formula code {
+    display: inline-block;
+    font-size: .875rem;
+    color: var(--ink);
+    background: var(--line-soft);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 7px 11px;
+    max-width: 100%;
+  }
+
   /* ── Hero ─────────────────────────────────────────── */
   .hero { padding: 0; overflow: hidden; }
 
@@ -559,8 +571,15 @@
       really a Celsius table; the formula gives the value in between. It agrees with every one of
       the 432 printed cells to within 1&deg;.</p>
       <p class="note"><b>NWS model</b> &mdash; the National Weather Service&rsquo;s own hourly
-      WBGT forecast for that exact field. Same temperature and humidity, but it also uses the real
-      sun angle, cloud cover and wind for that hour.</p>
+      WBGT forecast for that exact field, the same product weather.gov publishes. This is the one
+      that computes wet bulb globe temperature the way it is actually defined:</p>
+      <p class="formula"><code>WBGT = 0.7&middot;T<sub>nwb</sub> + 0.2&middot;T<sub>g</sub>
+      + 0.1&middot;T<sub>db</sub></code></p>
+      <p class="note">Natural wet bulb, black globe, dry bulb. NOAA builds all three from forecast
+      temperature, dew point, <b>wind speed</b>, <b>sky cover</b> and a solar radiation flux
+      computed for that hour, date and latitude. <b>The chart has only two of those inputs</b>
+      &mdash; air temperature and humidity &mdash; and approximates everything else. That one
+      difference is the whole reason the two numbers disagree.</p>
       <p class="note">The chart and the model routinely disagree, and the chart&rsquo;s own
       authors say why. The table traces to Australia&rsquo;s Bureau of Meteorology, who state that
       the approximation &ldquo;<b>does not take into account variations in the intensity of solar
@@ -572,15 +591,17 @@
       What moves is reality. A WBGT meter is mostly a wet thermometer and a black ball, and wind
       cools both, so the true reading falls while the chart stays put. The gap opens underneath
       it.</p>
-      <p class="note">In practice the chart has run 5&ndash;9&deg; above the model at every
-      playing hour this week &mdash; morning included &mdash; easily enough to put them in
+      <p class="note">In practice the chart routinely runs 5&ndash;9&deg; above the model
+      at every playing hour of the day &mdash; morning included &mdash; easily enough to put them in
       different categories all day. When they split, treat the day as genuinely borderline: the
       chart is the cautious number and the one that gets quoted; the model is closer to what a
       real meter at the field would read.</p>
       <p class="note" style="font-size:.8125rem">Provenance: the table comes from the US Soccer
       Heat Guidelines, which adapted it from the Bureau of Meteorology, who in turn cite the
       American College of Sports Medicine&rsquo;s 1984 position stand on preventing thermal
-      injuries in distance running (<em>Med. J. Aust.</em>, Dec 1984). The formula is
+      injuries in distance running (<em>Med. J. Aust.</em>, Dec 1984). The model comes from the
+      NDFD wet bulb globe temperature algorithm (NOAA/NWS Meteorological Development Laboratory),
+      operational since 2022. The chart&rsquo;s own formula is
       <code>WBGT = 0.567&middot;Ta + 0.393&middot;e + 3.94</code>. Above about 90&deg;F with high
       humidity the printed table simply stops, and this page falls back to the formula.</p>
     </section>
