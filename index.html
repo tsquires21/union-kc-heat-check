@@ -484,20 +484,33 @@
      that same table, with the forecast's own temperature and humidity driving
      the crosshair, so the box he'd point at is the box the page highlights. */
 
+  /* Two fixed columns, not a wrapping flex row. At 16px+ (which iOS requires)
+     the two readings plus the verdict will not fit on one line at 390px, and
+     letting them wrap put temperature and humidity on separate rows. */
   .grid-readout {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 16px;
-    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+    align-items: start;
+    margin-bottom: 10px;
   }
-  .ro { font-size: .78rem; color: var(--ink-faint); letter-spacing: .02em; text-transform: uppercase; }
-  .ro b { display: block; font-size: 1.15rem; color: var(--ink); font-weight: 700; letter-spacing: 0; text-transform: none; }
+  .ro {
+    display: block;
+    font-size: .72rem;
+    color: var(--ink-faint);
+    letter-spacing: .03em;
+    text-transform: uppercase;
+  }
+  /* The number and its unit are one unit of meaning -- keep them touching. The
+     input is right-aligned inside its fixed box so a two-digit value still sits
+     flush against the degree sign; the slack falls under the label instead. */
+  .ro-val { display: flex; align-items: baseline; gap: 1px; margin-top: 3px; }
 
   /* The two numbers above the grid ARE the input. Casey reads his own weather
      app; letting him overwrite these makes the forecast source irrelevant. */
   .ro input {
-    width: 3.3em;  /* has to fit "100" / "130" without clipping */
+    width: 3.1ch;   /* ch = one digit at tabular-nums, so exactly three fit */
+    text-align: right;
     /* Longhand, deliberately. `font: 700 1.15rem/1.2 inherit` is INVALID --
        `inherit` is not a legal family component inside the shorthand -- so the
        whole declaration was dropped and these fell back to the UA default of
@@ -506,7 +519,7 @@
        the page zoom and lurch on focus. Keep every one of these longhand, and
        keep the size at or above 16px. */
     font-family: inherit;
-    font-size: 1.4rem;
+    font-size: 1.25rem;
     font-weight: 700;
     line-height: 1.25;
     font-variant-numeric: tabular-nums;
@@ -516,15 +529,13 @@
     border-bottom: 2px dashed var(--line);
     border-radius: 0;
     padding: 2px 0;
-    text-align: left;
     -moz-appearance: textfield;
   }
   .ro input::-webkit-outer-spin-button,
   .ro input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .ro input:focus { outline: 0; border-bottom-color: var(--accent); }
   .ro input[aria-invalid="true"] { border-bottom-color: var(--stop); color: var(--stop); }
-  .ro .unit { font-size: 1.4rem; font-weight: 700; color: var(--ink); text-transform: none; letter-spacing: 0; }
-  .grid-readout label.ro { display: block; }
+  .ro .unit { font-size: 1.25rem; font-weight: 700; color: var(--ink); text-transform: none; letter-spacing: 0; }
 
   .grid-source {
     font-size: .78rem;
@@ -545,7 +556,8 @@
   .grid-source button:hover { border-color: var(--accent); }
   .grid-source.manual { color: var(--accent); font-weight: 600; }
   .grid-verdict {
-    margin-left: auto;
+    grid-column: 1 / -1;
+    justify-self: start;
     font-size: .8rem;
     font-weight: 650;
     color: var(--tone, var(--ink-soft));
@@ -714,11 +726,11 @@
         <h2 id="grid-title">The printed chart</h2>
         <div class="grid-readout">
           <label class="ro" for="man-temp">Temperature
-            <input type="number" id="man-temp" inputmode="decimal" step="1" min="32" max="130"
-                   autocomplete="off"><span class="unit">&deg;F</span></label>
+            <span class="ro-val"><input type="number" id="man-temp" inputmode="decimal" step="1"
+                   min="32" max="130" autocomplete="off"><span class="unit">&deg;F</span></span></label>
           <label class="ro" for="man-rh">Humidity
-            <input type="number" id="man-rh" inputmode="numeric" step="1" min="0" max="100"
-                   autocomplete="off"><span class="unit">%</span></label>
+            <span class="ro-val"><input type="number" id="man-rh" inputmode="numeric" step="1"
+                   min="0" max="100" autocomplete="off"><span class="unit">%</span></span></label>
           <span class="grid-verdict" id="grid-verdict"></span>
         </div>
         <p class="grid-source" id="grid-source"></p>
