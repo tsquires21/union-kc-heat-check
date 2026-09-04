@@ -193,6 +193,8 @@
     flex-wrap: wrap;
   }
   .row-2 > div:first-child { flex: 1 1 220px; min-width: 0; }
+  /* The two buttons share whichever row they wrap onto. */
+  .row-2 > .ghost { flex: 1 1 auto; }
 
   .ghost {
     padding: 11px 14px;
@@ -491,6 +493,46 @@
   }
   .ro { font-size: .78rem; color: var(--ink-faint); letter-spacing: .02em; text-transform: uppercase; }
   .ro b { display: block; font-size: 1.15rem; color: var(--ink); font-weight: 700; letter-spacing: 0; text-transform: none; }
+
+  /* The two numbers above the grid ARE the input. Casey reads his own weather
+     app; letting him overwrite these makes the forecast source irrelevant. */
+  .ro input {
+    width: 3.6em;
+    font: 700 1.15rem/1.2 inherit;
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+    border-bottom: 2px dashed var(--line);
+    border-radius: 0;
+    padding: 2px 0;
+    text-align: left;
+    -moz-appearance: textfield;
+  }
+  .ro input::-webkit-outer-spin-button,
+  .ro input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .ro input:focus { outline: 0; border-bottom-color: var(--accent); }
+  .ro input[aria-invalid="true"] { border-bottom-color: var(--stop); color: var(--stop); }
+  .ro .unit { font-size: 1.15rem; font-weight: 700; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .grid-readout label.ro { display: block; }
+
+  .grid-source {
+    font-size: .78rem;
+    color: var(--ink-faint);
+    margin: 0 0 10px;
+  }
+  .grid-source button {
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 650;
+    border-radius: 999px;
+    padding: 3px 11px;
+    margin-left: 6px;
+    cursor: pointer;
+  }
+  .grid-source button:hover { border-color: var(--accent); }
+  .grid-source.manual { color: var(--accent); font-weight: 600; }
   .grid-verdict {
     margin-left: auto;
     font-size: .8rem;
@@ -559,7 +601,7 @@
     table.grid .lit { box-shadow: inset 0 0 0 999px rgba(143, 155, 236, .1); }
   }
   table.grid td.hit {
-    outline: 3px solid var(--tone);
+    outline: 3px solid var(--tone, var(--ink-soft));
     outline-offset: -3px;
     font-weight: 800;
     font-size: .78rem;
@@ -611,6 +653,7 @@
         <select id="site"></select>
       </div>
       <button class="ghost" id="locate" type="button">Use my location</button>
+      <button class="ghost" id="manual" type="button">Use my numbers</button>
     </div>
     <div class="seg-wrap">
       <label class="field" id="view-label">What you want to do</label>
@@ -658,7 +701,16 @@
     <div id="view-grid" hidden>
       <section class="card">
         <h2 id="grid-title">The printed chart</h2>
-        <div class="grid-readout" id="grid-readout"></div>
+        <div class="grid-readout">
+          <label class="ro" for="man-temp">Temperature
+            <input type="number" id="man-temp" inputmode="decimal" step="1" min="32" max="130"
+                   autocomplete="off"><span class="unit">&deg;F</span></label>
+          <label class="ro" for="man-rh">Humidity
+            <input type="number" id="man-rh" inputmode="numeric" step="1" min="0" max="100"
+                   autocomplete="off"><span class="unit">%</span></label>
+          <span class="grid-verdict" id="grid-verdict"></span>
+        </div>
+        <p class="grid-source" id="grid-source"></p>
         <p class="grid-legend">Air temperature <b>&deg;F across the top</b> &middot; humidity
         <b>down the side</b> &middot; the boxes are <b>WBGT</b></p>
         <div class="grid-scroll" id="grid-scroll"></div>
@@ -669,9 +721,10 @@
         </div>
         <p class="note" style="margin-top:14px">This is the US Soccer table itself, with the
         forecast&rsquo;s own temperature and humidity picking the box &mdash; the same box you
-        would land on running a finger across the printed chart. Both readings are shown above it,
-        so if your weather app disagrees with the page you can see straight away which number is
-        the reason. Drag the slider to walk through the day.</p>
+        would land on running a finger across the printed chart. Drag the slider to walk through
+        the day. <b>Or type your own numbers into the two boxes above</b> and it will look those
+        up instead &mdash; so if you trust your weather app over this one, use its readings and
+        the answer is still the same table.</p>
       </section>
     </div>
 
@@ -879,7 +932,7 @@
   var GRID_CACHE = {};          // lat,lon -> gridpoint URL
   var state = { points: [], tz: "America/Chicago", dayKeys: [], dayIndex: 0,
                 site: null, nowIdx: 0, stale: false, method: "chart",
-                view: "forecast", gridHour: null, gridDay: -1 };
+                view: "forecast", gridHour: null, gridDay: -1, manual: null };
 
   // Every hour carries all three readings. The printed chart runs out past its
   // stepped right edge, so fall through the others rather than blanking an hour.
@@ -1341,52 +1394,147 @@
     return best;
   }
 
+  // Whatever is currently driving the crosshair: the typed-in numbers if there
+  // are any, otherwise the forecast hour under the slider.
+  function gridReading(list) {
+    if (state.manual) return state.manual;
+    if (!list.length) return null;
+    return { tempF: list[state.gridHour].tempF, rh: list[state.gridHour].rh };
+  }
+
+  function setInput(el, v) {
+    // Never fight the user for the caret.
+    if (document.activeElement === el) return;
+    el.value = String(Math.round(v));
+    el.setAttribute("aria-invalid", "false");
+  }
+
+  // Read both boxes. Both must be sane before anything moves -- a half-typed
+  // "9" should not slam the crosshair to 32 degrees and back.
+  function readInputs() {
+    var te = $("man-temp"), he = $("man-rh");
+    var t = parseFloat(te.value), h = parseFloat(he.value);
+    var tOk = isFinite(t) && t >= 32 && t <= 130;
+    var hOk = isFinite(h) && h >= 0 && h <= 100;
+    te.setAttribute("aria-invalid", String(!tOk));
+    he.setAttribute("aria-invalid", String(!hOk));
+    if (!tOk || !hOk) return;
+    state.manual = { tempF: t, rh: h };
+    renderGrid();
+  }
+
+  function useForecast() {
+    state.manual = null;
+    $("man-temp").setAttribute("aria-invalid", "false");
+    $("man-rh").setAttribute("aria-invalid", "false");
+    renderGrid();
+  }
+
+  // Entry point from the button beside "Use my location": jump into the grid,
+  // seed the boxes from whatever is on screen, and put the caret in the first.
+  function useOwnNumbers() {
+    state.view = "grid";
+    try { localStorage.setItem("soccer-heat-view", "grid"); } catch (e) { /* ignore */ }
+    paintView();
+    if (!state.manual) {
+      var seed = gridReading(gridHours()) || { tempF: 90, rh: 50 };
+      state.manual = { tempF: Math.round(seed.tempF), rh: Math.round(seed.rh) };
+    }
+    renderGrid();
+    var te = $("man-temp");
+    te.scrollIntoView({ block: "center" });
+    te.focus();
+    te.select();
+  }
+
   function renderGrid() {
     var list = gridHours();
     var slider = $("grid-hour");
 
-    if (!list.length) {
-      $("grid-readout").innerHTML = "";
-      $("grid-scroll").innerHTML =
-        '<p class="status">No temperature and humidity for this day.</p>';
-      $("grid-ends").innerHTML = "";
-      slider.disabled = true;
-      return;
-    }
-
-    if (state.gridDay !== state.dayIndex || state.gridHour === null ||
-        state.gridHour >= list.length) {
+    // Hour bookkeeping only matters while following the forecast.
+    if (list.length && (state.gridDay !== state.dayIndex || state.gridHour === null ||
+                        state.gridHour >= list.length)) {
       state.gridHour = defaultGridHour(list);
       state.gridDay = state.dayIndex;
     }
 
-    slider.disabled = list.length < 2;
-    slider.max = String(list.length - 1);
-    slider.value = String(state.gridHour);
-    $("grid-ends").innerHTML =
-      '<span>' + esc(hourLabel(list[0].t)) + '</span>' +
-      '<span><b>' + esc(hourLabel(list[state.gridHour].t)) + '</b></span>' +
-      '<span>' + esc(hourLabel(list[list.length - 1].t)) + '</span>';
+    var manual = !!state.manual;
+    var reading = gridReading(list);
 
-    var p = list[state.gridHour];
-    var hit = chartCell(p.tempF, p.rh);
-    var lvl = hit.wbgt === null ? null : categorize(hit.wbgt);
+    // The slider steers the forecast, so it has nothing to do with typed numbers.
+    slider.disabled = manual || list.length < 2;
+    if (list.length) {
+      slider.max = String(list.length - 1);
+      slider.value = String(state.gridHour);
+      $("grid-ends").innerHTML =
+        '<span>' + esc(hourLabel(list[0].t)) + '</span>' +
+        '<span><b>' + (manual ? "&mdash;" : esc(hourLabel(list[state.gridHour].t))) + '</b></span>' +
+        '<span>' + esc(hourLabel(list[list.length - 1].t)) + '</span>';
+    } else {
+      $("grid-ends").innerHTML = "";
+    }
 
-    $("grid-title").textContent = "The printed chart — " +
-      (state.dayIndex === 0 ? "today" : dayLong(p.t)) + ", " + hourLabel(p.t);
+    // Typed numbers still work with no forecast at all -- that is the point of
+    // having them.
+    if (!reading) {
+      $("grid-title").textContent = "The printed chart";
+      $("grid-verdict").className = "grid-verdict";
+      $("grid-verdict").textContent = "Type a temperature and humidity";
+      $("grid-source").className = "grid-source";
+      $("grid-source").textContent = "No forecast temperature or humidity for this day.";
+      $("grid-scroll").innerHTML = "";
+      return;
+    }
 
-    $("grid-readout").innerHTML =
-      '<span class="ro">Temperature<b>' + Math.round(p.tempF) + '&deg;F</b></span>' +
-      '<span class="ro">Humidity<b>' + Math.round(p.rh) + '%</b></span>' +
-      '<span class="grid-verdict' + (lvl ? " " + lvl.cls : "") + '">' +
-        (hit.wbgt === null
-          ? "Off the printed table"
-          : '<b>' + round1(hit.wbgt) + '&deg;</b> &middot; ' + esc(lvl.label.split(" — ")[0])) +
-      '</span>';
+    setInput($("man-temp"), reading.tempF);
+    setInput($("man-rh"), reading.rh);
+
+    var hit = chartCell(reading.tempF, reading.rh);
+    // Past the table's stepped right edge the VERDICT is certain but the NUMBER
+    // is not. Every box along that edge is already 100.4F+ WBGT against a 92.0
+    // cancel line, so anything beyond it is a cancellation. The generating
+    // formula is not usable to fill the gap: vapour pressure climbs
+    // exponentially, so it returns 163F at 120F/90% and 203F at 130F/100%.
+    // Those are extrapolations far outside where the approximation was ever
+    // validated -- which is exactly why the printed table stops. Show the
+    // verdict, print no invented figure.
+    var offTable = hit.wbgt === null;
+    var lvl = offTable ? LEVELS.stop : categorize(hit.wbgt);
+
+    $("grid-title").textContent = manual
+      ? "The printed chart \u2014 your numbers"
+      : "The printed chart \u2014 " +
+        (state.dayIndex === 0 ? "today" : dayLong(list[state.gridHour].t)) + ", " +
+        hourLabel(list[state.gridHour].t);
+
+    var v = $("grid-verdict");
+    v.className = "grid-verdict " + lvl.cls;
+    v.innerHTML = offTable
+      ? "Past the table &middot; " + esc(lvl.label.split(" \u2014 ")[0])
+      : "<b>" + round1(hit.wbgt) + "&deg;</b> &middot; " + esc(lvl.label.split(" \u2014 ")[0]);
+
+    var src = $("grid-source");
+    src.className = "grid-source" + (manual ? " manual" : "");
+    if (manual) {
+      src.innerHTML = "Using your numbers." +
+        '<button type="button" id="man-reset">Use the forecast</button>';
+      $("man-reset").onclick = useForecast;
+    } else {
+      src.innerHTML = "Using the forecast for " + esc(hourLabel(list[state.gridHour].t)) +
+        " &mdash; type over either number to use your own.";
+    }
+    // Below the chart's first column there is no colder box to fall into.
+    if (reading.tempF < CHART_T0) {
+      src.innerHTML += " <b>Cooler than the chart starts (68.0&deg;F) &mdash; showing its first column.</b>";
+    }
+    if (offTable) {
+      src.innerHTML += " <b>Hotter and more humid than the printed table goes.</b> Every box" +
+        " along its edge is already 100&deg;+ WBGT, so this is a cancellation either way" +
+        " &mdash; the table just prints no number out here.";
+    }
 
     // 651 cells is small enough to rebuild outright rather than diff.
-    var h = ['<table class="grid"><thead><tr><th class="corner' +
-             '">%RH</th>'];
+    var h = ['<table class="grid"><thead><tr><th class="corner">%RH</th>'];
     for (var c = 0; c < CHART_TN; c++) {
       h.push('<th' + (c === hit.ci ? ' class="lit"' : '') + '>' +
              (CHART_T0 + c * CHART_TSTEP).toFixed(1) + '</th>');
@@ -1397,24 +1545,23 @@
       var rowLit = r === hit.ri;
       h.push('<tr><th' + (rowLit ? ' class="lit"' : '') + '>' + (r * 5) + '%</th>');
       for (var c2 = 0; c2 < CHART_TN; c2++) {
-        var v = cellAt(r, c2);
+        var cv = cellAt(r, c2);
         var isHit = rowLit && c2 === hit.ci;
         var cls = [];
-        if (v === null) cls.push("off");
-        else cls.push(categorize(v).cls);
+        cls.push(cv === null ? "off" : categorize(cv).cls);
         if (rowLit || c2 === hit.ci) cls.push("lit");
         if (isHit) cls.push("hit");
         h.push('<td class="' + cls.join(" ") + '"' +
                (isHit ? ' id="grid-hit" aria-current="true"' : '') + '>' +
-               (v === null ? "&mdash;" : round1(v)) + '</td>');
+               (cv === null ? "&mdash;" : round1(cv)) + '</td>');
       }
       h.push('</tr>');
     }
     h.push('</tbody></table>');
     $("grid-scroll").innerHTML = h.join("");
 
-    // Scroll the box into view horizontally -- 31 columns is far wider than a
-    // phone, and an unscrolled table hides the whole point.
+    // Scroll the box into view -- 31 columns is far wider than a phone, and an
+    // unscrolled table hides the whole point.
     var box = $("grid-hit"), wrap = $("grid-scroll");
     if (box) {
       wrap.scrollLeft = Math.max(0, box.offsetLeft - wrap.clientWidth / 2 + box.offsetWidth / 2);
@@ -1498,6 +1645,10 @@
       state.gridHour = parseInt(this.value, 10) || 0;
       renderGrid();
     });
+
+    $("man-temp").addEventListener("input", readInputs);
+    $("man-rh").addEventListener("input", readInputs);
+    $("manual").onclick = useOwnNumbers;
 
     $("method").addEventListener("click", function (e) {
       var b = e.target.closest("button[data-m]");
