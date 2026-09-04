@@ -497,8 +497,19 @@
   /* The two numbers above the grid ARE the input. Casey reads his own weather
      app; letting him overwrite these makes the forecast source irrelevant. */
   .ro input {
-    width: 3.6em;
-    font: 700 1.15rem/1.2 inherit;
+    width: 3.3em;  /* has to fit "100" / "130" without clipping */
+    /* Longhand, deliberately. `font: 700 1.15rem/1.2 inherit` is INVALID --
+       `inherit` is not a legal family component inside the shorthand -- so the
+       whole declaration was dropped and these fell back to the UA default of
+       13.3px Arial 400 while the unit beside them rendered at 18.4px. That also
+       put them under iOS Safari's 16px threshold, which is exactly what made
+       the page zoom and lurch on focus. Keep every one of these longhand, and
+       keep the size at or above 16px. */
+    font-family: inherit;
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
     color: var(--ink);
     background: transparent;
     border: 0;
@@ -512,7 +523,7 @@
   .ro input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .ro input:focus { outline: 0; border-bottom-color: var(--accent); }
   .ro input[aria-invalid="true"] { border-bottom-color: var(--stop); color: var(--stop); }
-  .ro .unit { font-size: 1.15rem; font-weight: 700; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .ro .unit { font-size: 1.4rem; font-weight: 700; color: var(--ink); text-transform: none; letter-spacing: 0; }
   .grid-readout label.ro { display: block; }
 
   .grid-source {
@@ -1442,8 +1453,11 @@
     }
     renderGrid();
     var te = $("man-temp");
-    te.scrollIntoView({ block: "center" });
-    te.focus();
+    // One scroll, not two: park the card near the top of the viewport, then
+    // focus without letting the browser scroll again. Centring the field
+    // instead meant the keyboard opened over it and everything jumped twice.
+    $("view-grid").scrollIntoView({ block: "start" });
+    try { te.focus({ preventScroll: true }); } catch (e) { te.focus(); }
     te.select();
   }
 
