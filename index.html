@@ -559,13 +559,15 @@
       the other parents are quoting</b>, so it is what this page shows by default.</p>
       <p class="note">One catch worth knowing, because it will explain any argument you have with
       someone else&rsquo;s lookup. The table only prints every 1.8&deg;F and every 5% humidity, so
-      a real forecast almost never lands on a box &mdash; <b>you have to round, and which way you
-      round changes the answer.</b> This page takes the <em>nearest</em> box in both directions.
-      Someone who instead rounds down to the box before theirs can land a whole category lower:
-      96&deg;F at 38% is &ldquo;cancelled&rdquo; rounded to nearest and &ldquo;heat schedule&rdquo;
-      rounded down. Across a typical week that choice flips the verdict in roughly one hour in
-      three. Nearest is the closer match to the formula the table was built from, which is why it
-      is the one used here &mdash; and it is the more cautious of the two.</p>
+      a real forecast almost never lands exactly on a box. <b>This page treats every printed value
+      as a threshold: the reading has to actually reach the next column or row before it moves up,
+      and it never rounds up.</b> A 96&deg;F forecast has not reached the 96.8 column, so it reads
+      in the 95.0 column; 38% humidity has not reached the 40 row, so it reads in the 35 row. That
+      box says 89.6 &mdash; heat schedule. Round to the <em>nearest</em> box instead and the same
+      hour reads 93.2, a whole category up and cancelled. Across a typical week the choice moves
+      the verdict in roughly one hour in three, always downward, so this page reads a little cooler
+      than one that rounds to nearest. That is deliberate: it is the box a person actually points
+      at when they run their finger across the printed table.</p>
       <p class="note"><b>Formula</b> &mdash; the equation that table was generated from, run
       directly instead of looked up. The printed chart steps in 1.8&deg; jumps because it is
       really a Celsius table; the formula gives the value in between. It agrees with every one of
@@ -673,13 +675,24 @@
     "091112131416171820212324______________________________________",  // 100%
   ];
 
-  // Read the table the way a person does: nearest printed row, nearest printed
-  // column. Returns null past the table's stepped right edge.
+  // Read the table the way it is meant to be read: every printed row and column
+  // is a THRESHOLD, and a reading only moves up to one once it has actually
+  // reached it. 96.0°F has not reached the 96.8 column, so it reads in 95.0;
+  // 38% has not reached the 40 row, so it reads in 35. It never rounds up.
+  //
+  // EPS matters. tempF arrives as °C×9/5+32, so a reading sitting exactly on a
+  // printed column lands a hair under it in binary floating point — (96.8-68)/1.8
+  // is 15.999999999999998, and a bare floor would drop it a whole column. EPS
+  // pulls those back onto their own column without ever reaching the next one.
+  //
+  // Below the first column (68.0°F) there is no lower box to fall back to, so
+  // clamp. Returns null past the table's stepped right edge.
+  var CHART_EPS = 1e-9;
   function chartLookup(tempF, rh) {
-    var ri = Math.round(rh / 5);
+    var ri = Math.floor(rh / 5 + CHART_EPS);
     if (ri < 0) ri = 0;
     if (ri >= CHART_ROWS.length) ri = CHART_ROWS.length - 1;
-    var ci = Math.round((tempF - CHART_T0) / CHART_TSTEP);
+    var ci = Math.floor((tempF - CHART_T0) / CHART_TSTEP + CHART_EPS);
     if (ci < 0) ci = 0;
     if (ci >= CHART_TN) return null;
     var code = CHART_ROWS[ri].substr(ci * 2, 2);
