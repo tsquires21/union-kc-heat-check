@@ -477,6 +477,101 @@
   footer strong { color: var(--ink-soft); }
   footer a { color: var(--accent); }
 
+  /* --- The printed chart, rendered live ------------------------------ */
+  /* Casey reads the paper table by hand off his phone's weather app. This is
+     that same table, with the forecast's own temperature and humidity driving
+     the crosshair, so the box he'd point at is the box the page highlights. */
+
+  .grid-readout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin-bottom: 12px;
+  }
+  .ro { font-size: .78rem; color: var(--ink-faint); letter-spacing: .02em; text-transform: uppercase; }
+  .ro b { display: block; font-size: 1.15rem; color: var(--ink); font-weight: 700; letter-spacing: 0; text-transform: none; }
+  .grid-verdict {
+    margin-left: auto;
+    font-size: .8rem;
+    font-weight: 650;
+    color: var(--tone, var(--ink-soft));
+    background: var(--tone-bg, var(--tint));
+    border: 1px solid var(--tone-line, var(--line));
+    border-radius: 999px;
+    padding: 6px 13px;
+  }
+  .grid-verdict b { font-size: 1rem; }
+
+  .grid-legend {
+    font-size: .76rem;
+    color: var(--ink-faint);
+    margin: 0 0 8px;
+  }
+  .grid-legend b { color: var(--ink-soft); font-weight: 650; }
+
+  .grid-scroll {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: 60vh;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  table.grid {
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: .7rem;
+    font-variant-numeric: tabular-nums;
+    background: var(--card);
+  }
+  table.grid th, table.grid td {
+    padding: 0 5px;
+    height: 27px;
+    text-align: center;
+    white-space: nowrap;
+    border-right: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+  }
+  table.grid th {
+    font-weight: 650;
+    color: var(--ink-soft);
+    background: var(--tint);
+  }
+  /* Both axes stay put while you scroll -- a lookup table you cannot see the
+     labels of is useless on a phone. */
+  table.grid thead th { position: sticky; top: 0; z-index: 3; min-width: 47px; }
+  table.grid tbody th { position: sticky; left: 0; z-index: 2; min-width: 44px; }
+  table.grid thead th.corner { left: 0; z-index: 4; }
+  table.grid td { min-width: 47px; color: var(--ink-soft); background: var(--card); }
+
+  /* Every printed cell carries its own verdict colour, the way the published
+     table is banded. */
+  table.grid td.go, table.grid td.caution, table.grid td.stop {
+    background: var(--tone-bg);
+    color: var(--tone);
+  }
+  table.grid td.off { color: var(--ink-faint); opacity: .35; }
+
+  /* The crosshair: the row and column you actually landed in. */
+  table.grid .lit { box-shadow: inset 0 0 0 999px rgba(45, 52, 108, .07); }
+  table.grid th.lit { background: var(--navy); color: var(--on-navy); box-shadow: none; }
+  @media (prefers-color-scheme: dark) {
+    table.grid .lit { box-shadow: inset 0 0 0 999px rgba(143, 155, 236, .1); }
+  }
+  table.grid td.hit {
+    outline: 3px solid var(--tone);
+    outline-offset: -3px;
+    font-weight: 800;
+    font-size: .78rem;
+    box-shadow: none;
+    position: relative;
+    z-index: 1;
+  }
+
+  .grid-slider { margin-top: 14px; }
+  .grid-slider input[type=range] { width: 100%; accent-color: var(--navy); margin: 6px 0 0; }
+  .slider-ends { display: flex; justify-content: space-between; font-size: .75rem; color: var(--ink-faint); }
+
   .status {
     padding: 26px 16px;
     text-align: center;
@@ -518,6 +613,13 @@
       <button class="ghost" id="locate" type="button">Use my location</button>
     </div>
     <div class="seg-wrap">
+      <label class="field" id="view-label">What you want to do</label>
+      <div class="seg" id="view" role="group" aria-labelledby="view-label">
+        <button type="button" data-v="forecast">Check the forecast</button>
+        <button type="button" data-v="grid">Read the chart</button>
+      </div>
+    </div>
+    <div class="seg-wrap" id="method-wrap">
       <label class="field" id="method-label">How to read the heat</label>
       <div class="seg" id="method" role="group" aria-labelledby="method-label">
         <button type="button" data-m="chart">Chart</button>
@@ -536,20 +638,42 @@
 
     <div class="days" id="days" role="group" aria-label="Choose a day"></div>
 
-    <section class="card">
-      <h2 id="chart-title">Through the day</h2>
-      <div class="chart-wrap"><svg class="chart" id="chart" viewBox="0 0 720 300" preserveAspectRatio="xMidYMid meet" role="img"></svg></div>
-    </section>
+    <div id="view-forecast">
+      <section class="card">
+        <h2 id="chart-title">Through the day</h2>
+        <div class="chart-wrap"><svg class="chart" id="chart" viewBox="0 0 720 300" preserveAspectRatio="xMidYMid meet" role="img"></svg></div>
+      </section>
 
-    <section class="card">
-      <h2>Hour by hour</h2>
-      <ul class="hours" id="hours"></ul>
-    </section>
+      <section class="card">
+        <h2>Hour by hour</h2>
+        <ul class="hours" id="hours"></ul>
+      </section>
 
-    <section class="card">
-      <h2>Next 7 days &mdash; daily peak</h2>
-      <ul class="week" id="week"></ul>
-    </section>
+      <section class="card">
+        <h2>Next 7 days &mdash; daily peak</h2>
+        <ul class="week" id="week"></ul>
+      </section>
+    </div>
+
+    <div id="view-grid" hidden>
+      <section class="card">
+        <h2 id="grid-title">The printed chart</h2>
+        <div class="grid-readout" id="grid-readout"></div>
+        <p class="grid-legend">Air temperature <b>&deg;F across the top</b> &middot; humidity
+        <b>down the side</b> &middot; the boxes are <b>WBGT</b></p>
+        <div class="grid-scroll" id="grid-scroll"></div>
+        <div class="grid-slider">
+          <input type="range" id="grid-hour" min="0" max="0" step="1" value="0"
+                 aria-label="Hour of the day">
+          <div class="slider-ends" id="grid-ends"></div>
+        </div>
+        <p class="note" style="margin-top:14px">This is the US Soccer table itself, with the
+        forecast&rsquo;s own temperature and humidity picking the box &mdash; the same box you
+        would land on running a finger across the printed chart. Both readings are shown above it,
+        so if your weather app disagrees with the page you can see straight away which number is
+        the reason. Drag the slider to walk through the day.</p>
+      </section>
+    </div>
 
     <section class="card">
       <h2>Three ways to read the heat</h2>
@@ -688,16 +812,29 @@
   // Below the first column (68.0°F) there is no lower box to fall back to, so
   // clamp. Returns null past the table's stepped right edge.
   var CHART_EPS = 1e-9;
-  function chartLookup(tempF, rh) {
+
+  // Value of one printed cell, or null where the table stops.
+  function cellAt(ri, ci) {
+    if (ri < 0 || ri >= CHART_ROWS.length || ci < 0 || ci >= CHART_TN) return null;
+    var code = CHART_ROWS[ri].substr(ci * 2, 2);
+    if (code === "__" || code.length < 2) return null;
+    return CHART_BASE + parseInt(code, 10) * CHART_STEP;
+  }
+
+  // Which box a reading lands in. The grid view needs the coordinates, not just
+  // the number, so it can light up the row and column you'd trace by hand.
+  function chartCell(tempF, rh) {
     var ri = Math.floor(rh / 5 + CHART_EPS);
     if (ri < 0) ri = 0;
     if (ri >= CHART_ROWS.length) ri = CHART_ROWS.length - 1;
     var ci = Math.floor((tempF - CHART_T0) / CHART_TSTEP + CHART_EPS);
     if (ci < 0) ci = 0;
-    if (ci >= CHART_TN) return null;
-    var code = CHART_ROWS[ri].substr(ci * 2, 2);
-    if (code === "__" || code.length < 2) return null;
-    return CHART_BASE + parseInt(code, 10) * CHART_STEP;
+    // Past the right edge there is no column to point at, but the row is still real.
+    return { ri: ri, ci: ci, wbgt: ci >= CHART_TN ? null : cellAt(ri, ci) };
+  }
+
+  function chartLookup(tempF, rh) {
+    return chartCell(tempF, rh).wbgt;
   }
 
   var ORDER = ["chart", "formula", "nws"];
@@ -741,7 +878,8 @@
   var UA_NOTE = "SoccerHeatCheck";
   var GRID_CACHE = {};          // lat,lon -> gridpoint URL
   var state = { points: [], tz: "America/Chicago", dayKeys: [], dayIndex: 0,
-                site: null, nowIdx: 0, stale: false, method: "chart" };
+                site: null, nowIdx: 0, stale: false, method: "chart",
+                view: "forecast", gridHour: null, gridDay: -1 };
 
   // Every hour carries all three readings. The printed chart runs out past its
   // stepped right edge, so fall through the others rather than blanking an hour.
@@ -985,6 +1123,7 @@
     $("chart-title").textContent = state.dayIndex === 0 ? "Rest of today" : dayLong(pts[0].t);
     drawChart(pts);
     renderHours(pts);
+    renderGrid();
   }
 
   function renderHours(pts) {
@@ -1176,6 +1315,125 @@
     });
   }
 
+  // --- The printed chart, rendered live ---------------------------------
+  // Casey reads the paper table by hand against whatever his weather app says.
+  // This shows the same table with the forecast driving the crosshair, and
+  // prints the temperature and humidity it used -- so when the page and his
+  // phone disagree, the input causing it is visible instead of buried.
+
+  function gridHours() {
+    var pts = dayPoints().filter(function (p) {
+      return p.tempF !== undefined && p.rh !== undefined;
+    });
+    var play = playableHours(pts, state.dayIndex === 0);
+    return play.length ? play : pts;
+  }
+
+  // Today opens on now; a future day opens on its hottest hour, which is the
+  // one anyone is actually asking about.
+  function defaultGridHour(list) {
+    if (state.dayIndex === 0) return 0;
+    var best = 0, bestV = -Infinity;
+    for (var i = 0; i < list.length; i++) {
+      var w = chartLookup(list[i].tempF, list[i].rh);
+      if (w !== null && w > bestV) { bestV = w; best = i; }
+    }
+    return best;
+  }
+
+  function renderGrid() {
+    var list = gridHours();
+    var slider = $("grid-hour");
+
+    if (!list.length) {
+      $("grid-readout").innerHTML = "";
+      $("grid-scroll").innerHTML =
+        '<p class="status">No temperature and humidity for this day.</p>';
+      $("grid-ends").innerHTML = "";
+      slider.disabled = true;
+      return;
+    }
+
+    if (state.gridDay !== state.dayIndex || state.gridHour === null ||
+        state.gridHour >= list.length) {
+      state.gridHour = defaultGridHour(list);
+      state.gridDay = state.dayIndex;
+    }
+
+    slider.disabled = list.length < 2;
+    slider.max = String(list.length - 1);
+    slider.value = String(state.gridHour);
+    $("grid-ends").innerHTML =
+      '<span>' + esc(hourLabel(list[0].t)) + '</span>' +
+      '<span><b>' + esc(hourLabel(list[state.gridHour].t)) + '</b></span>' +
+      '<span>' + esc(hourLabel(list[list.length - 1].t)) + '</span>';
+
+    var p = list[state.gridHour];
+    var hit = chartCell(p.tempF, p.rh);
+    var lvl = hit.wbgt === null ? null : categorize(hit.wbgt);
+
+    $("grid-title").textContent = "The printed chart — " +
+      (state.dayIndex === 0 ? "today" : dayLong(p.t)) + ", " + hourLabel(p.t);
+
+    $("grid-readout").innerHTML =
+      '<span class="ro">Temperature<b>' + Math.round(p.tempF) + '&deg;F</b></span>' +
+      '<span class="ro">Humidity<b>' + Math.round(p.rh) + '%</b></span>' +
+      '<span class="grid-verdict' + (lvl ? " " + lvl.cls : "") + '">' +
+        (hit.wbgt === null
+          ? "Off the printed table"
+          : '<b>' + round1(hit.wbgt) + '&deg;</b> &middot; ' + esc(lvl.label.split(" — ")[0])) +
+      '</span>';
+
+    // 651 cells is small enough to rebuild outright rather than diff.
+    var h = ['<table class="grid"><thead><tr><th class="corner' +
+             '">%RH</th>'];
+    for (var c = 0; c < CHART_TN; c++) {
+      h.push('<th' + (c === hit.ci ? ' class="lit"' : '') + '>' +
+             (CHART_T0 + c * CHART_TSTEP).toFixed(1) + '</th>');
+    }
+    h.push('</tr></thead><tbody>');
+
+    for (var r = 0; r < CHART_ROWS.length; r++) {
+      var rowLit = r === hit.ri;
+      h.push('<tr><th' + (rowLit ? ' class="lit"' : '') + '>' + (r * 5) + '%</th>');
+      for (var c2 = 0; c2 < CHART_TN; c2++) {
+        var v = cellAt(r, c2);
+        var isHit = rowLit && c2 === hit.ci;
+        var cls = [];
+        if (v === null) cls.push("off");
+        else cls.push(categorize(v).cls);
+        if (rowLit || c2 === hit.ci) cls.push("lit");
+        if (isHit) cls.push("hit");
+        h.push('<td class="' + cls.join(" ") + '"' +
+               (isHit ? ' id="grid-hit" aria-current="true"' : '') + '>' +
+               (v === null ? "&mdash;" : round1(v)) + '</td>');
+      }
+      h.push('</tr>');
+    }
+    h.push('</tbody></table>');
+    $("grid-scroll").innerHTML = h.join("");
+
+    // Scroll the box into view horizontally -- 31 columns is far wider than a
+    // phone, and an unscrolled table hides the whole point.
+    var box = $("grid-hit"), wrap = $("grid-scroll");
+    if (box) {
+      wrap.scrollLeft = Math.max(0, box.offsetLeft - wrap.clientWidth / 2 + box.offsetWidth / 2);
+      wrap.scrollTop  = Math.max(0, box.offsetTop  - wrap.clientHeight / 2 + box.offsetHeight / 2);
+    }
+  }
+
+  // The method toggle is meaningless in grid view -- the grid IS the chart.
+  function paintView() {
+    var btns = $("view").querySelectorAll("button");
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].setAttribute("aria-pressed", String(btns[i].dataset.v === state.view));
+    }
+    var grid = state.view === "grid";
+    $("view-forecast").hidden = grid;
+    $("view-grid").hidden = !grid;
+    $("method-wrap").hidden = grid;
+  }
+
   function renderAll() {
     renderHero();
     renderDays();
@@ -1219,8 +1477,27 @@
     try {
       var m = localStorage.getItem("soccer-heat-method");
       if (ORDER.indexOf(m) >= 0) state.method = m;
+      var v = localStorage.getItem("soccer-heat-view");
+      if (v === "forecast" || v === "grid") state.view = v;
     } catch (e) { /* private mode */ }
     paintMethod();
+    paintView();
+
+    $("view").addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-v]");
+      if (!b || b.dataset.v === state.view) return;
+      state.view = b.dataset.v;
+      try { localStorage.setItem("soccer-heat-view", state.view); } catch (err) { /* ignore */ }
+      paintView();
+      // The grid is laid out from clientWidth, so it can only centre itself
+      // once it is actually on screen.
+      if (state.view === "grid" && state.points.length) renderGrid();
+    });
+
+    $("grid-hour").addEventListener("input", function () {
+      state.gridHour = parseInt(this.value, 10) || 0;
+      renderGrid();
+    });
 
     $("method").addEventListener("click", function (e) {
       var b = e.target.closest("button[data-m]");
