@@ -655,6 +655,91 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+  /* ── Lightning view ─────────────────────────────────────────────── */
+
+  /* A third option no longer fits on one line at phone width, and the shared
+     .seg rule would silently truncate to "Check the fo…". Wrap instead, and
+     only here -- the heat-method toggle's labels are short and still fit. */
+  #view button { white-space: normal; line-height: 1.15; padding: 8px 6px; }
+
+  /* display:flex beats the UA's [hidden]{display:none}, so say it explicitly
+     -- without this the warning box shows as an empty red sliver with no alert. */
+  .lz-warn[hidden] { display: none; }
+  .lz-warn {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: var(--stop-bg); border: 1px solid var(--stop-line);
+    border-left: 4px solid var(--stop); border-radius: var(--radius);
+    padding: 12px 14px; margin-bottom: 14px;
+  }
+  .lz-warn b { color: var(--stop); display: block; }
+  .lz-warn span { color: var(--ink-soft); font-size: .88rem; }
+
+  .lz-strikes { border-left: 4px solid var(--line); }
+  .lz-strikes.hit   { border-left-color: var(--stop); background: var(--stop-bg); }
+  .lz-strikes.watch { border-left-color: var(--caution); background: var(--caution-bg); }
+  .lz-strikes.far   { border-left-color: var(--go); }
+  .lz-strikes.off   { border-left-color: var(--line); }
+  .lz-dist {
+    margin: 2px 0 6px; font-size: clamp(1.5rem, 7vw, 2.1rem); font-weight: 700;
+    letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  }
+  .lz-strikes.hit   .lz-dist { color: var(--stop); }
+  .lz-strikes.watch .lz-dist { color: var(--caution); }
+  .lz-strikes.far   .lz-dist { color: var(--go); }
+  .lz-src { margin: 10px 0 0; font-size: .78rem; color: var(--ink-faint); line-height: 1.5; }
+
+  .lz-clock { border: 2px solid var(--line); text-align: center; }
+  .lz-clock.running { border-color: var(--stop-line); background: var(--stop-bg); }
+  .lz-clock.nearly  { border-color: var(--caution-line); background: var(--caution-bg); }
+  .lz-clock.idle    { border-color: var(--go-line); background: var(--go-bg); }
+
+  .lz-state { margin: 0 0 4px; font-size: clamp(1.15rem, 5vw, 1.5rem); font-weight: 700; letter-spacing: -.015em; }
+  .lz-clock.running .lz-state { color: var(--stop); }
+  .lz-clock.nearly  .lz-state { color: var(--caution); }
+  .lz-clock.idle    .lz-state { color: var(--go); }
+
+  .lz-time {
+    font-size: clamp(2.6rem, 15vw, 4.2rem); font-weight: 700; line-height: 1.05;
+    font-variant-numeric: tabular-nums; letter-spacing: -.03em; margin: 6px 0 2px;
+  }
+  .lz-clock.running .lz-time { color: var(--stop); }
+  .lz-clock.nearly  .lz-time { color: var(--caution); }
+  .lz-sub { margin: 0; color: var(--ink-soft); font-size: .88rem; }
+
+  .lz-meter { height: 8px; border-radius: 99px; background: var(--line-soft); overflow: hidden; margin: 14px 0 4px; }
+  .lz-meter > i { display: block; height: 100%; border-radius: 99px; transition: width .5s linear; }
+  .lz-clock.running .lz-meter > i { background: var(--stop); }
+  .lz-clock.nearly  .lz-meter > i { background: var(--caution); }
+
+  .lz-btns { display: grid; gap: 8px; margin-top: 14px; grid-template-columns: 1fr; }
+  @media (min-width: 460px) { .lz-btns.two { grid-template-columns: 1fr 1fr; } }
+  .lz-btns button {
+    font: inherit; font-weight: 600; font-size: .95rem; cursor: pointer;
+    padding: 13px 14px; border-radius: 11px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink);
+  }
+  .lz-btns button.primary { background: var(--stop); border-color: var(--stop); color: #fff; }
+  .lz-btns button.primary:hover { filter: brightness(1.08); }
+
+  .lz-th { display: grid; grid-template-columns: repeat(auto-fit, minmax(46px, 1fr)); gap: 5px; }
+  .lz-th .c { text-align: center; }
+  .lz-th .t { font-size: .7rem; color: var(--ink-faint); margin-bottom: 4px; }
+  .lz-th .b { height: clamp(48px, 13vw, 68px); background: var(--line-soft); border-radius: 6px; position: relative; overflow: hidden; }
+  .lz-th .b > i { position: absolute; left: 0; right: 0; bottom: 0; background: var(--accent); border-radius: 6px; }
+  .lz-th .b.warn > i { background: var(--caution); }
+  .lz-th .b.high > i { background: var(--club-red); }
+  .lz-th .v { font-size: .78rem; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .lz-th .c.now .t { color: var(--accent); font-weight: 700; }
+
+  .lz-note { margin: 12px 0 0; font-size: .83rem; color: var(--ink-soft); }
+  .lz-limits { border-left: 4px solid var(--club-red); }
+  .lz-limits ul, .lz-rule ul { margin: 0; padding-left: 20px; }
+  .lz-limits li, .lz-rule li { margin-bottom: 7px; font-size: .9rem; }
+  .lz-quote {
+    margin: 10px 0 0; padding: 10px 12px; background: var(--tint);
+    border-radius: 9px; font-size: .85rem; color: var(--ink-soft); font-style: italic;
+  }
 </style>
 </head>
 <body>
@@ -683,6 +768,7 @@
       <div class="seg" id="view" role="group" aria-labelledby="view-label">
         <button type="button" data-v="forecast">Check the forecast</button>
         <button type="button" data-v="grid">Read the chart</button>
+        <button type="button" data-v="lightning">Lightning</button>
       </div>
     </div>
     <div class="seg-wrap" id="method-wrap">
@@ -748,6 +834,66 @@
         the day. <b>Or type your own numbers into the two boxes above</b> and it will look those
         up instead &mdash; so if you trust your weather app over this one, use its readings and
         the answer is still the same table.</p>
+      </section>
+    </div>
+
+    <div id="view-lightning" hidden>
+
+      <div class="lz-warn" id="lz-warn" hidden>
+        <span aria-hidden="true">&#9888;</span>
+        <div><b id="lz-warn-head"></b><span id="lz-warn-body"></span></div>
+      </div>
+
+      <section class="card lz-strikes off" id="lz-strikes" aria-live="polite"></section>
+
+      <section class="card lz-clock idle" id="lz-clock" aria-live="polite">
+        <p class="lz-state" id="lz-state">Clock not running</p>
+        <p class="lz-time" id="lz-time">30:00</p>
+        <p class="lz-sub" id="lz-sub">Start it the moment you hear thunder, see lightning, or the horn sounds.</p>
+        <div class="lz-meter" id="lz-meter" hidden><i style="width:0%"></i></div>
+        <div class="lz-btns" id="lz-btns">
+          <button type="button" class="primary" id="lz-start">Thunder or lightning just now</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 style="margin:0 0 4px">Chance of thunder</h2>
+        <p class="note" style="margin:0 0 12px">Hourly, for this field specifically &mdash; not a
+        metro-wide number. Straight from the National Weather Service.</p>
+        <div class="lz-th" id="lz-hours"></div>
+        <p class="lz-note" id="lz-th-note"></p>
+      </section>
+
+      <section class="card lz-rule">
+        <h2 style="margin:0 0 8px">The rule this follows</h2>
+        <p class="note" style="margin:0 0 10px">Sporting Lee&rsquo;s Summit stops play when a strike
+        lands <b>within 10 miles</b>, and play resumes only after <b>30 minutes</b> with nothing new
+        inside that ring. Any new strike restarts the clock &mdash; which is what this timer does.</p>
+        <ul>
+          <li>At Legacy Park a horn enforces it: one blast to stop, three for all clear.</li>
+          <li>The detector driving that horn covers <b>Legacy Park only</b>. No other complex has one.</li>
+          <li>So at every other field, the 30 minutes is yours to keep. That is what this is for.</li>
+        </ul>
+      </section>
+
+      <section class="card lz-limits">
+        <h2 style="margin:0 0 8px">What this can&rsquo;t do</h2>
+        <ul>
+          <li><b>It misses lightning.</b> The satellite catches roughly seven flashes in ten during
+          daylight &mdash; sunlit cloud tops wash out what it looks for &mdash; and it cannot tell a
+          ground strike from one that stayed in the cloud. Distances are good to about two miles.</li>
+          <li><b>Nothing predicts the first strike.</b> A storm&rsquo;s opening bolt arrives with no
+          warning from any system, commercial or government. This can only tell you about lightning
+          that has already happened.</li>
+          <li><b>The feed can go down.</b> It comes from a machine at Tim&rsquo;s house. If it is
+          unreachable the strike panel says so, and the clock and forecast keep working &mdash;
+          start the clock yourself.</li>
+          <li><b>It does not overrule the league.</b> Sporting LS still makes the call and posts it
+          to their cancellation line and app.</li>
+        </ul>
+        <p class="lz-quote">&ldquo;You should never depend solely on the reliability of these
+        devices. Hearing thunder and seeing lightning should always take precedent.&rdquo;
+        &mdash; National Federation of State High School Associations</p>
       </section>
     </div>
 
@@ -954,8 +1100,9 @@
   var UA_NOTE = "SoccerHeatCheck";
   var GRID_CACHE = {};          // lat,lon -> gridpoint URL
   var state = { points: [], tz: "America/Chicago", dayKeys: [], dayIndex: 0,
-                site: null, nowIdx: 0, stale: false, method: "chart",
-                view: "forecast", gridHour: null, gridDay: -1, manual: null };
+                site: null, lat: null, lon: null, nowIdx: 0, stale: false,
+                method: "chart", view: "forecast", gridHour: null, gridDay: -1,
+                manual: null, glm: null };
 
   // Every hour carries all three readings. The printed chart runs out past its
   // stepped right edge, so fall through the others rather than blanking an hour.
@@ -1082,6 +1229,11 @@
       fold(props.wetBulbGlobeTemperature, "nws");
       fold(props.temperature, "tempF");
       fold(props.relativeHumidity, "rh");
+      // Thunder rides along on the same gridpoint request the heat already makes.
+      // lightningActivityLevel is deliberately NOT read: it is a deprecated 1-6
+      // fire-weather scale (NWCG recommended dropping it in 2024) and comes back
+      // empty from Kansas City anyway.
+      fold(props.probabilityOfThunder, "thunder");
 
       return Object.keys(byHour).map(function (k) {
         var pt = byHour[k];
@@ -1169,7 +1321,7 @@
       b.setAttribute("aria-pressed", String(i === state.dayIndex));
       b.innerHTML = '<span class="dot" style="background:var(--tone)"></span>' +
                     (i === 0 ? "Today" : esc(dayLabel(pts[0].t)));
-      b.onclick = function () { state.dayIndex = i; renderDay(); renderDays(); };
+      b.onclick = function () { state.dayIndex = i; renderDay(); renderDays(); renderThunder(); };
       box.appendChild(b);
     });
   }
@@ -1267,6 +1419,7 @@
       state.dayIndex = +li.dataset.i;
       renderDay();
       renderDays();
+      renderThunder();
       document.getElementById("chart-title").scrollIntoView({ behavior: "smooth", block: "center" });
     };
   }
@@ -1365,6 +1518,8 @@
       if (!points.length) throw new Error("NO_WBGT");
       state.points = points;
       state.site = name;
+      state.lat = lat;
+      state.lon = lon;
       state.dayIndex = 0;
       locateNow();
 
@@ -1376,6 +1531,7 @@
       });
 
       renderAll();
+      loadAlerts(lat, lon);
       $("stamp").textContent = "Updated " + fmt(new Date(), { hour: "numeric", minute: "2-digit", hour12: true }) + ".";
 
       show(st, false);
@@ -1601,10 +1757,310 @@
     for (var i = 0; i < btns.length; i++) {
       btns[i].setAttribute("aria-pressed", String(btns[i].dataset.v === state.view));
     }
-    var grid = state.view === "grid";
-    $("view-forecast").hidden = grid;
-    $("view-grid").hidden = !grid;
-    $("method-wrap").hidden = grid;
+    var v = state.view;
+    $("view-forecast").hidden = v !== "forecast";
+    $("view-grid").hidden     = v !== "grid";
+    $("view-lightning").hidden = v !== "lightning";
+    // The heat-method toggle only means anything in the forecast view.
+    $("method-wrap").hidden = v !== "forecast";
+  }
+
+  // ── Lightning ──────────────────────────────────────────────────────
+  // No live strike feed exists that a page like this may legally use:
+  // Blitzortung's terms bar storm-warning use (and say so downstream too),
+  // and NOAA's own strike data is bulk netCDF/GRIB2 on S3 with no browser
+  // surface. So this does NOT pretend to detect anything. It keeps the
+  // 30-minute clock -- which is the part people actually get wrong -- and
+  // shows the forecast and any official warning.
+  var LZ_HOLD_MS = 30 * 60 * 1000;
+  var LZ_KEY = "soccer-heat-lz-until";        // hold the user started by hand
+  var LZ_DISMISS = "soccer-heat-lz-dismissed"; // how far a cancel reached
+  var lzTicker = null;
+
+  // Observed strikes come from hearth, because they cannot come from here:
+  // see the header comment in hearth/glm_watch.py. If this is unreachable the
+  // page must lose the strike half and nothing else.
+  var GLM_URL = "https://hearth.tailc90cfc.ts.net/glm-kc.js";
+  var GLM_RING_MI = 10;                       // Sporting LS's published rule
+  var GLM_STALE_MS = 6 * 60 * 1000;           // watcher runs every 60 s
+  var GLM_POLL_MS = 60 * 1000;
+  var glmPoller = null;
+
+  function lsGet(k) {
+    try {
+      var v = parseInt(localStorage.getItem(k), 10);
+      return isFinite(v) ? v : null;
+    } catch (e) { return null; }
+  }
+  function lsPut(k, v) {
+    try {
+      if (v === null) localStorage.removeItem(k);
+      else localStorage.setItem(k, String(v));
+    } catch (e) { /* private mode - the clock still runs for this session */ }
+  }
+  function lzRead() { return lzEffective().until; }
+  function lzWrite(until) { lsPut(LZ_KEY, until); }
+
+  // Equirectangular is accurate to well under a mile at this scale, and a GLM
+  // fix carries ~2 miles of its own error, so great-circle maths would be
+  // false precision.
+  function glmDistMi(aLat, aLon, bLat, bLon) {
+    var dLat = (bLat - aLat) * 69.055;
+    var dLon = (bLon - aLon) * 69.055 * Math.cos(aLat * Math.PI / 180);
+    return Math.sqrt(dLat * dLat + dLon * dLon);
+  }
+
+  function glmSummary() {
+    var g = state.glm;
+    if (!g || !g.flashes || state.lat === null) return null;
+    if (Date.now() - g.generated * 1000 > GLM_STALE_MS) return { stale: true };
+
+    var nearest = null, inRing = null;
+    g.flashes.forEach(function (f) {
+      var mi = glmDistMi(state.lat, state.lon, f.lat, f.lon);
+      if (!nearest || mi < nearest.mi) nearest = { mi: mi, t: f.t };
+      if (mi <= GLM_RING_MI && (!inRing || f.t > inRing.t)) inRing = { mi: mi, t: f.t };
+    });
+    return { stale: false, status: g.status, reason: g.reason,
+             windowMinutes: g.windowMinutes || 35,
+             nearest: nearest, inRing: inRing, count: g.flashes.length };
+  }
+
+  // The clock has two independent sources: a button the user pressed, and an
+  // observed strike inside the ring. The later of the two wins.
+  //
+  // Cancel records how far the hold it dismissed reached, so cancelling does
+  // not get instantly undone by the same strike on the next poll -- while a
+  // genuinely NEWER strike still produces a later deadline and re-arms it.
+  function lzEffective() {
+    var manual = lsGet(LZ_KEY) || 0;
+    var dismissed = lsGet(LZ_DISMISS) || 0;
+    var auto = 0;
+    var s = glmSummary();
+    if (s && !s.stale && s.inRing) {
+      var a = s.inRing.t * 1000 + LZ_HOLD_MS;
+      if (a > dismissed) auto = a;
+    }
+    var until = Math.max(manual, auto);
+    return { until: until || null, auto: auto || null, manual: manual || null,
+             strike: auto ? (s && s.inRing) : null };
+  }
+
+  function lzClockTime(ms) {
+    return fmt(new Date(ms), { hour: "numeric", minute: "2-digit", hour12: true });
+  }
+
+  function renderClock() {
+    var card = $("lz-clock");
+    if (!card) return;
+    var eff = lzEffective();
+    var until = eff.until;
+    var now = Date.now();
+    var left = until === null ? null : until - now;
+
+    // Storing the deadline rather than a countdown is what lets this survive
+    // a locked phone, a reload, or the tab being closed and reopened.
+    if (left !== null && left <= 0) { lzWrite(null); until = null; left = null; }
+
+    var meter = $("lz-meter");
+    var fill = meter.firstElementChild;
+
+    if (left === null) {
+      card.className = "card lz-clock idle";
+      $("lz-state").textContent = "Clock not running";
+      $("lz-time").textContent = "30:00";
+      $("lz-sub").textContent = "Start it the moment you hear thunder, see lightning, or the horn sounds.";
+      show(meter, false);
+      $("lz-btns").className = "lz-btns";
+      $("lz-btns").innerHTML =
+        '<button type="button" class="primary" id="lz-start">Thunder or lightning just now</button>';
+    } else {
+      var secs = Math.ceil(left / 1000);
+      var mm = Math.floor(secs / 60);
+      var ss = secs % 60;
+      var nearly = left <= 5 * 60 * 1000;
+      card.className = "card lz-clock " + (nearly ? "nearly" : "running");
+      $("lz-state").textContent = nearly ? "Almost clear" : "Hold — clock running";
+      $("lz-time").textContent = mm + ":" + (ss < 10 ? "0" + ss : ss);
+
+      var why = "";
+      if (eff.strike && eff.auto >= (eff.manual || 0)) {
+        why = "Started by a strike " + eff.strike.mi.toFixed(1) + " miles out, " +
+              minsAgo(eff.strike.t) + ". ";
+      }
+      $("lz-sub").textContent = why + "Clear at " + lzClockTime(until) +
+        ", if nothing new happens. Any new thunder or lightning restarts the 30 minutes.";
+      show(meter, true);
+      fill.style.width = (100 - (left / LZ_HOLD_MS) * 100).toFixed(1) + "%";
+      $("lz-btns").className = "lz-btns two";
+      $("lz-btns").innerHTML =
+        '<button type="button" class="primary" id="lz-start">Restart — that was new</button>' +
+        '<button type="button" id="lz-cancel">Cancel</button>';
+    }
+
+    $("lz-start").onclick = function () {
+      lsPut(LZ_DISMISS, null);
+      lzWrite(Date.now() + LZ_HOLD_MS);
+      renderClock();
+    };
+    var cancel = document.getElementById("lz-cancel");
+    if (cancel) cancel.onclick = function () {
+      // Remember how far this hold reached, so the strike that started it
+      // cannot immediately re-arm it on the next poll.
+      lsPut(LZ_DISMISS, until);
+      lzWrite(null);
+      renderClock();
+    };
+  }
+
+  function minsAgo(unixSec) {
+    var m = Math.max(0, Math.round((Date.now() - unixSec * 1000) / 60000));
+    return m <= 0 ? "just now" : m === 1 ? "1 minute ago" : m + " minutes ago";
+  }
+
+  // ── Observed strikes (from hearth) ─────────────────────────────────
+  // Loaded with a <script> tag rather than fetch() on purpose: hearth's share
+  // service sends no CORS headers, and script loads are not subject to CORS.
+  // That means zero changes to a service already serving other people's links.
+  function glmLoad(done) {
+    var s = document.createElement("script");
+    s.src = GLM_URL + "?t=" + Date.now();
+    s.onload = function () {
+      state.glm = window.__GLM_KC || null;
+      s.remove();
+      done();
+    };
+    s.onerror = function () { s.remove(); done(); };
+    document.head.appendChild(s);
+  }
+
+  function renderStrikes() {
+    var box = $("lz-strikes");
+    if (!box) return;
+    var s = glmSummary();
+
+    if (!s || s.stale) {
+      box.className = "card lz-strikes off";
+      box.innerHTML = '<p class="field">Observed strikes</p>' +
+        '<p class="lz-sub">Not available right now — the strike feed is unreachable or out of date. ' +
+        'The clock and the forecast below still work; start the clock yourself if you see or hear anything.</p>';
+      return;
+    }
+
+    var head, body, cls;
+    if (s.inRing) {
+      cls = "hit";
+      head = s.inRing.mi.toFixed(1) + " miles out";
+      body = "A strike landed inside the 10-mile ring " + minsAgo(s.inRing.t) +
+             ", so the clock above is running.";
+    } else if (s.nearest && s.nearest.mi <= 30) {
+      cls = "watch";
+      head = s.nearest.mi.toFixed(1) + " miles out";
+      body = "Nearest strike in the last " + s.windowMinutes + " minutes, " + minsAgo(s.nearest.t) +
+             ". Outside the 10-mile ring, so play continues — but it is close enough to watch.";
+    } else if (s.nearest) {
+      cls = "far";
+      head = Math.round(s.nearest.mi) + " miles out";
+      body = "Nothing near the field. Nearest strike is a long way off.";
+    } else {
+      cls = "far";
+      head = "Nothing detected";
+      body = s.status === "quiet"
+        ? "No lightning near Kansas City, and no thunderstorm in the forecast."
+        : "No strikes detected near the field in the last 35 minutes.";
+    }
+
+    box.className = "card lz-strikes " + cls;
+    box.innerHTML =
+      '<p class="field">Observed strikes &mdash; nearest to ' + esc(state.site || "the field") + '</p>' +
+      '<p class="lz-dist">' + esc(head) + '</p>' +
+      '<p class="lz-sub">' + esc(body) + '</p>' +
+      '<p class="lz-src">Satellite-detected lightning from NOAA GOES-19, updated every minute. ' +
+      'It sees in-cloud flashes as well as ground strikes, carries about two miles of position ' +
+      'error, and misses roughly three flashes in ten during daylight. It is a help, not a guarantee.</p>';
+  }
+
+  function startGlm() {
+    if (glmPoller) return;
+    var tick = function () { glmLoad(function () { renderStrikes(); renderClock(); }); };
+    tick();
+    glmPoller = setInterval(tick, GLM_POLL_MS);
+  }
+
+  function startLzTicker() {
+    if (lzTicker) return;
+    lzTicker = setInterval(renderClock, 1000);
+  }
+
+  function renderThunder() {
+    var host = $("lz-hours");
+    if (!host) return;
+    host.innerHTML = "";
+
+    var key = state.dayKeys[state.dayIndex];
+    var pts = state.points.filter(function (p) {
+      return dayKey(p.t) === key && p.thunder !== undefined && p.thunder !== null;
+    });
+
+    if (!pts.length) {
+      $("lz-th-note").textContent =
+        "The National Weather Service is not publishing a thunder probability for this field right now.";
+      return;
+    }
+
+    var peak = 0, peakAt = null;
+    pts.forEach(function (p) {
+      if (p.thunder > peak) { peak = p.thunder; peakAt = p.t; }
+
+      var c = document.createElement("div");
+      c.className = "c" + (state.points[state.nowIdx] && p.t.getTime() === state.points[state.nowIdx].t.getTime() ? " now" : "");
+
+      var t = document.createElement("div");
+      t.className = "t";
+      t.textContent = fmt(p.t, { hour: "numeric", hour12: true }).replace(" ", "");
+
+      var b = document.createElement("div");
+      b.className = "b" + (p.thunder >= 50 ? " high" : p.thunder >= 25 ? " warn" : "");
+      var i = document.createElement("i");
+      i.style.height = Math.max(4, p.thunder) + "%";
+      b.appendChild(i);
+
+      var v = document.createElement("div");
+      v.className = "v";
+      v.textContent = p.thunder + "%";
+
+      c.appendChild(t); c.appendChild(b); c.appendChild(v);
+      host.appendChild(c);
+    });
+
+    $("lz-th-note").textContent = peak === 0
+      ? "No thunder in the forecast for this day."
+      : "Highest chance is " + peak + "% around " +
+        fmt(peakAt, { hour: "numeric", hour12: true }) + ". This is the chance a storm happens — " +
+        "not a promise that one will, and not a warning that one has started.";
+  }
+
+  // Official warnings. Free, keyless, CORS-open. Never blocks the page.
+  function loadAlerts(lat, lon) {
+    var box = $("lz-warn");
+    show(box, false);
+    fetch("https://api.weather.gov/alerts/active?point=" + lat.toFixed(4) + "," + lon.toFixed(4),
+          { headers: { Accept: "application/geo+json" } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.features || !j.features.length) return;
+        var hit = null;
+        j.features.forEach(function (f) {
+          var ev = (f.properties && f.properties.event) || "";
+          if (!hit && /thunderstorm|tornado/i.test(ev)) hit = f.properties;
+        });
+        if (!hit) return;
+        $("lz-warn-head").textContent = hit.event;
+        $("lz-warn-body").textContent = (hit.headline || "") +
+          (hit.expires ? " Until " + lzClockTime(new Date(hit.expires).getTime()) + "." : "");
+        show(box, true);
+      })
+      .catch(function () { /* a missing warning must never break the page */ });
   }
 
   function renderAll() {
@@ -1612,6 +2068,9 @@
     renderDays();
     renderDay();
     renderWeek();
+    renderThunder();
+    renderStrikes();
+    renderClock();
   }
 
   function paintMethod() {
@@ -1651,10 +2110,15 @@
       var m = localStorage.getItem("soccer-heat-method");
       if (ORDER.indexOf(m) >= 0) state.method = m;
       var v = localStorage.getItem("soccer-heat-view");
-      if (v === "forecast" || v === "grid") state.view = v;
+      if (v === "forecast" || v === "grid" || v === "lightning") state.view = v;
     } catch (e) { /* private mode */ }
     paintMethod();
     paintView();
+    // The clock ticks whatever view is on screen: a hold started at the field
+    // has to still be counting when he comes back to the tab.
+    renderClock();
+    startLzTicker();
+    startGlm();
 
     $("view").addEventListener("click", function (e) {
       var b = e.target.closest("button[data-v]");
@@ -1665,6 +2129,7 @@
       // The grid is laid out from clientWidth, so it can only centre itself
       // once it is actually on screen.
       if (state.view === "grid" && state.points.length) renderGrid();
+      if (state.view === "lightning" && state.points.length) { renderThunder(); renderStrikes(); }
     });
 
     $("grid-hour").addEventListener("input", function () {
